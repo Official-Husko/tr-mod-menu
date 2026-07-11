@@ -1,0 +1,21 @@
+public enum DetailTileType
+{
+	None,
+	LeftDown,
+	RightDown,
+	LeftUp,
+	RightUp,
+	Left,
+	Right,
+	Down,
+	Up,
+	CornerRightUp,
+	CornerLeftUp,
+	CornerRightDown,
+	CornerLeftDown,
+	UpDown,
+	UpCornerRightDown,
+	UpCornerLeftDown,
+	DownCornerRightUp,
+	DownCornerLeftUp
+}

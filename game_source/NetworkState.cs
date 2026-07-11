@@ -1,0 +1,24 @@
+public enum NetworkState
+{
+	Offline,
+	SettingUpInviteCode,
+	ConnectingToMaster,
+	ConnectedToMaster,
+	ConnectingToLobby,
+	ConnectedToLobby,
+	WaitingForRoomSelect,
+	WaitingForFileSelect,
+	JoinOrCreateRoom,
+	CreatingRoom,
+	RoomCreated,
+	JoiningRoom,
+	RoomJoined,
+	WaitingForPlayers,
+	SpawningPlayer,
+	LoadingMap,
+	MapLoaded,
+	InGameplay,
+	CreateRoomFailed,
+	JoinRoomFailed,
+	Disconnecting
+}

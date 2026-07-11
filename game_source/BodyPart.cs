@@ -1,0 +1,27 @@
+public enum BodyPart
+{
+	Skin,
+	Torso,
+	Legs,
+	Shoes,
+	Hair,
+	Beard,
+	Eyes,
+	Nose,
+	Mouth,
+	Tool,
+	ToolRag,
+	ToolSeedBag,
+	ToolPick,
+	ToolMug,
+	ToolSpade,
+	ToolAx,
+	ToolHoe,
+	ToolSickle,
+	ToolSpoon,
+	ToolSandwich,
+	ToolMop,
+	ToolRod,
+	ToolWateringCan,
+	Shadow
+}

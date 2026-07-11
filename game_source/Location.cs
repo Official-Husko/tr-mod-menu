@@ -1,0 +1,40 @@
+using System;
+
+[Flags]
+public enum Location
+{
+	None = 0,
+	Tavern = 1,
+	Road = 2,
+	River = 4,
+	Camp = 8,
+	Quarry = 0x10,
+	Farm = 0x20,
+	BarnInterior = 0x40,
+	FarmShop = 0x80,
+	CityOutside = 0x100,
+	Mine = 0x200,
+	QuarryCave = 0x400,
+	InnkeepersCave = 0x800,
+	Beach = 0x1000,
+	WilsonHouse = 0x2000,
+	City = 0x4000,
+	CityTavern = 0x8000,
+	Sawmill = 0x10000,
+	Blacksmith = 0x20000,
+	ChristmasCave = 0x40000,
+	PetShop = 0x80000,
+	CastleGarden = 0x100000,
+	Port = 0x200000,
+	PirateShip = 0x400000,
+	PirateCave = 0x800000,
+	Castle = 0x1000000,
+	Forest = 0x2000000,
+	Bathhouse = 0x4000000,
+	BathhouseInterior = 0x8000000,
+	ButcherHouse = 0x10000000,
+	KujakuHouse = 0x20000000,
+	VampireHouse = 0x40000000,
+	RoomsMultiplayer = int.MinValue,
+	Anywhere = -1
+}

@@ -1,0 +1,21 @@
+public enum DrawGizmosType
+{
+	None,
+	PathNodes,
+	Location,
+	GroundType,
+	CanPlaceObjects,
+	BlockingObjects,
+	Wall,
+	Buildable,
+	AnyPlaceable,
+	Doors,
+	Wooded,
+	Farmable,
+	HasSnow,
+	SnowProbability,
+	IsPath,
+	IsWater,
+	Fishing,
+	AlreadyCreatedWorldTiles
+}

@@ -1,0 +1,773 @@
+using System;
+using UnityEngine;
+
+[CreateAssetMenu(menuName = "Game/Quest/Craft Item Type")]
+public class CraftItemTypeQuest : RequiredItemQuest
+{
+	protected void LAHKFPMPNIJ(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void HHLKIGAJPHE(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void OCKBGJODOLK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void IHPBEDHJBMG(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void IDBGIAOCPBK(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void IJAODMPIMOO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void KEHMDIDPJCK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void ENOBIFBCLCL(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (BBLDBGHLAGK(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void PDIKODBNCDE(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PNCNBJNNCOA(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LPFCOEIHJGE(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void MOEJFIPKCEG(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GGKFOPMEBGC(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void OFPGJPJJDKJ(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void FMHOONAGBLA(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (CCGEMKPPHOD(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KMKOLEEKFPC(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void HGBNMGDNALA(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void BNBJLICEDCO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void PAFBBODNOJM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KABDMKENDLN(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void IGIOKEKAHEK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void JPDLAKMPEKE(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void OMNDEKGMJKK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DCOKPEEELAN(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void AOBOCNBNPAD(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void EPINNIFOHND(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (MAHEIJJAHCD(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void EGJEFGBNCJN(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (CCGEMKPPHOD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	public override void OEICMCIGNKO()
+	{
+		if (id != 0)
+		{
+			CommonReferences instance = CommonReferences.GGFJGHHHEJC;
+			instance.OnAnyItemCrafted = (Action<int, ItemInstanceAmount>)Delegate.Combine(instance.OnAnyItemCrafted, new Action<int, ItemInstanceAmount>(AIOHOCHIEHH));
+			CommonReferences instance2 = CommonReferences.GGFJGHHHEJC;
+			instance2.OnAnyItemAged = (Action<int, ItemInstance, int>)Delegate.Combine(instance2.OnAnyItemAged, new Action<int, ItemInstance, int>(AIOHOCHIEHH));
+		}
+	}
+
+	protected void KADDANGHHOH(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KMANLBCBBJJ(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void HPKJBNACIFK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void BFBBIGNIENA(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OHJKPACFNBM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void EEIPNLKECAN(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void AIOHOCHIEHH(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void ILLKICHGLNO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DCOKPEEELAN(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void BKBEOFLDEJO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (BBLDBGHLAGK(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void JBFOANECCOK(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void OMIAMMPIKFO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void MGENBLKKPEO(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (CCGEMKPPHOD(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GNPPBBOEKJI(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void NMJOGIMDBBO(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (MAHEIJJAHCD(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void HIFFJHFMENL(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void CJGPAMEFCMN(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KDLIMEHKBBD(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void DDPJFFHEGML(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void HBNGINBJIFO(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LDMFJDADLPN(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GNELCMEAEAF(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void KMEJPIIEDBO(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void BJJNDNLHLIL(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OGCAFAMHOPH(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void KPFNABFJFOI(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (BBLDBGHLAGK(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void MGKKFDIAAHH(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (CCGEMKPPHOD(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void PCPLJMEMBBC(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void DECFHGIMCHA(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (BBLDBGHLAGK(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void KGKKFGNBPFM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OAMIFBNPIAP(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PNCNBJNNCOA(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void HEJMFFFFCPG(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PNCNBJNNCOA(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void GGNCNMDGLIM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (CCGEMKPPHOD(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OLKEPBHKDCC(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	public override void MHOGPMHEAFN()
+	{
+		if (id != 0)
+		{
+			CommonReferences instance = CommonReferences.GGFJGHHHEJC;
+			instance.OnAnyItemCrafted = (Action<int, ItemInstanceAmount>)Delegate.Remove(instance.OnAnyItemCrafted, new Action<int, ItemInstanceAmount>(AIOHOCHIEHH));
+			CommonReferences instance2 = CommonReferences.GGFJGHHHEJC;
+			instance2.OnAnyItemAged = (Action<int, ItemInstance, int>)Delegate.Remove(instance2.OnAnyItemAged, new Action<int, ItemInstance, int>(AIOHOCHIEHH));
+		}
+		MFHHJFEJAMF();
+	}
+
+	protected void KCAEBFGAKPE(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PNCNBJNNCOA(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void NNOKFMDGADJ(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (CCGEMKPPHOD(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KAKOJJGGOJM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LLILLIKBIPP(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void JKLLOBGKENJ(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void AIOHOCHIEHH(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GFPHPKMDMBB(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OJOJHIEDCON(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GHCGKEMKPGA(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KPMGJDBMDHL(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LCHJFJEJCJJ(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DCOKPEEELAN(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void GIBFAFFAGNA(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (MAHEIJJAHCD(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void DIABCMPCEEF(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PNCNBJNNCOA(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void OPAKABJOKGK(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LAMDJFCMDIH(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void DGDEAGHLBBL(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (BBLDBGHLAGK(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void CHCBNELHPDF(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void IAAFFCHNHJH(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void FHIAFOMLNGE(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void EKOKGCMLHGN(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DBPOKFLMJEE(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void MDDOIBMHDDA(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (MAHEIJJAHCD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void CHMCPJECOHM(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void CLNKPFPLHEF(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void LEOHLNKOPIE(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void KFAPIKJNLDC(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void BBCICIJGGID(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PCGAAKMLDAI(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void FDDKEFOCOAB(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void MIKBGGPLPMN(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DBPOKFLMJEE(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void AKPKIIPLNBI(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (DGALJHKINMH(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void CMOICCAACMA(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (PCGAAKMLDAI(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void ENNODAEPEOF(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (BBLDBGHLAGK(DNLMCHDOMOK))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void PFIFFNBHHBN(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (CCGEMKPPHOD(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void MEFBHOICALI(int JIIGOACEIKL, ItemInstance DNLMCHDOMOK, int MGNOBNCMDJG)
+	{
+		if (PNCNBJNNCOA(DNLMCHDOMOK))
+		{
+			PIGBLLFBKHD(JIIGOACEIKL, MGNOBNCMDJG);
+		}
+	}
+
+	protected void LPCFMOAMFMM(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DGALJHKINMH(IAIHNNNGNKH.itemInstance))
+		{
+			GKDGCBNNHAD(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+
+	protected void LGIJAEHEMKD(int JIIGOACEIKL, ItemInstanceAmount IAIHNNNGNKH)
+	{
+		if (DCOKPEEELAN(IAIHNNNGNKH.itemInstance))
+		{
+			EPIMKBNCFCK(JIIGOACEIKL, IAIHNNNGNKH.amount);
+		}
+	}
+}

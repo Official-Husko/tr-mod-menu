@@ -1,0 +1,10 @@
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/bin/Debug/net472/tr_mod_menu.dll
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/bin/Debug/net472/tr_mod_menu.pdb
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr-mod-menu.csproj.AssemblyReference.cache
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/MyPluginInfo.cs
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr-mod-menu.GeneratedMSBuildEditorConfig.editorconfig
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr-mod-menu.AssemblyInfoInputs.cache
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr-mod-menu.AssemblyInfo.cs
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr-mod-menu.csproj.CoreCompileInputs.cache
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr_mod_menu.dll
+/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/obj/Debug/net472/tr_mod_menu.pdb

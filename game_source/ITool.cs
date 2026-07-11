@@ -1,0 +1,12 @@
+public interface ITool
+{
+	bool HEKGALMDLIL(int JIIGOACEIKL);
+
+	bool NBFBPMNMBJG(int JIIGOACEIKL);
+
+	void LBMKLIDKHJD(int JIIGOACEIKL);
+
+	void AONJJGAIDBG(int JIIGOACEIKL);
+
+	bool FDKEMPDCHFB();
+}

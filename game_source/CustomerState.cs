@@ -1,0 +1,19 @@
+public enum CustomerState
+{
+	Inactive,
+	Spawning,
+	Despawning,
+	HeadingToBar,
+	WaitingAtBar,
+	HeadingToSeat,
+	EatingAtTable,
+	BeingANuisance,
+	Leaving,
+	WaitingForBarSpot,
+	RentRoom,
+	OrderInTable,
+	RequestRoom,
+	RouteWalk,
+	Adoption,
+	LENGTH
+}

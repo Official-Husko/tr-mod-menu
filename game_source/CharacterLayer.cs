@@ -1,0 +1,21 @@
+public enum CharacterLayer
+{
+	Skin,
+	Torso1,
+	Torso2,
+	Torso3,
+	Pants,
+	Shoes,
+	Iris,
+	Hair,
+	Beard,
+	Tool,
+	Pants2,
+	Hat,
+	Pants3,
+	Shoes2,
+	ToolSpoon,
+	ToolSandwich,
+	ToolMug,
+	TorsoExtra
+}

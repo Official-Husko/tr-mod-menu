@@ -1,0 +1,21 @@
+public enum PlatformOS
+{
+	Undefined,
+	Windows,
+	MacOS,
+	Linux,
+	WindowsSteam,
+	MacOSSteam,
+	LinuxSteam,
+	Steamdeck,
+	WindowsGOG,
+	MacOSGOG,
+	LinuxGOG,
+	PS4,
+	PS5,
+	XBoxOne,
+	XBoxSeries,
+	NSwitch,
+	NSwitch2,
+	Count
+}

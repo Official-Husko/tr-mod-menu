@@ -1,0 +1,19 @@
+public enum BuildingTutorialGoals
+{
+	MoveWASD,
+	PressSHIFT,
+	AddFloor,
+	ChangeTavernFloor,
+	ApplyCraftingZone,
+	AssignWall,
+	AssignFloor,
+	CreateDoor,
+	CreateRentedRoomDoor,
+	ChooseRoomName,
+	ActivateBuildMode,
+	PlaceBed,
+	PlaceTable,
+	PlaceChair,
+	PlaceLight,
+	AcceptChanges
+}
