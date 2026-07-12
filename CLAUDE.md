@@ -16,8 +16,10 @@ uGUI mod menu (dark theme, sidebar navigation) plus real cheat hooks into the ga
   A `RowSpec` in `MenuCategories.cs` wires a UI row to one of these via its `onExecute`
   parameter (stored as `RowSpec.OnExecute`). Until wired, a row just logs
   `[Placeholder] ...` when used — that's expected, not a bug. `CompatibilityGate.cs` checks
-  `Application.version` against `KnownCompatibleVersion` once at startup and disables every
-  wired (non-placeholder) row if it doesn't match — see "Adding a new cheat" below.
+  `VersionNumberManager.instance.version` against `KnownCompatibleVersion` once at startup and
+  disables every wired (non-placeholder) row if it doesn't match — see "Adding a new cheat"
+  below. See also "Cheats never target other online players" below for a hard rule plus some
+  unused-for-now infrastructure kept around for a future cheat that can legitimately use it.
 - `Icons/` — small PNGs rasterized ahead of time from the Font Awesome Pro kit in `assets/`
   (embedded as resources — see "Adding an icon" below).
 - `game_source/` — ILSpy-decompiled dump of every assembly the game loads (Assembly-CSharp,
@@ -203,6 +205,20 @@ those, and reconstruct the total-value math ourselves (`copper + silver*100 + go
 matching the game's own encoding) rather than calling one of `MoneyCalc`'s obfuscated helper
 methods that happens to do something similar.
 
+That same file is also a counter-example worth remembering: reading an obfuscated method's
+decompiled body is not proof it's safe to call. `PlayerController.HGJCFHPNFBI()` looks like
+exactly the "find the local player" method we needed (scans the player array for whichever
+one's `PhotonView.IsMine`), so it was used for `LocalPlayer()` initially — but its decompiled
+loop dereferences `GJBBNHCMNJN[0].gameObject` with no null check, and slot 0 is never assigned
+by any spawn-registration path in that file (always starts at index 1), so it throws a
+`NullReferenceException` on its very first iteration, unconditionally, every single call.
+Confirmed live: dragging the Walk/Sprint Speed sliders threw exactly that, from inside the
+game's own method, not ours. `PlayerCheats.LocalPlayer()` now reimplements the same "IsMine"
+logic itself via `Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None)` with a
+proper null check, avoiding the obfuscated method entirely. Lesson: verify a decompiled method
+against actual runtime behavior before trusting it, not just against how plausible its body
+reads — obfuscation can produce genuinely broken code paths, not only unstably-named ones.
+
 `Cheats/CompatibilityGate.cs` finds the game's *displayed* version by tracing a visible piece of
 UI back to its data source, rather than guessing: the pause menu shows a version string at the
 bottom of its centered box, so grep `game_source/` for the UI class that draws it
@@ -214,3 +230,35 @@ issue worth remembering: `VersionNumberManager.instance` is set in *its own* `Aw
 isn't guaranteed to have run yet when a BepInEx plugin's `Awake()` fires — `MenuController` polls
 for it in a coroutine (with a timeout, failing safe to "cheats disabled") before building
 anything that depends on `CompatibilityGate.CheatsEnabled`.
+
+### Cheats never target other online players
+
+Rule: a cheat's effect must never depend on another connected player also running tr-mod-menu.
+If the only way to make a cheat affect someone else is for them to have this mod installed too,
+don't build it — cut it rather than ship a partial/conditional version.
+
+This came up for real: `PlayerController.speed`/`.sprintMultiplier` are purely local, unsynced
+fields (no `IPunObservable`/`OnPhotonSerializeView` anywhere on that class, no existing
+`[PunRPC]` methods either), so there's no native game mechanism to change another client's
+movement speed. The only way around that is a custom Photon RPC — which requires a matching
+`[PunRPC]` handler to already exist on the *receiving* machine, i.e. the target would need to be
+running this same mod. Built (a custom `[PunRPC]` receiver riding each player's existing
+`PhotonView`) and then removed once that dependency was clear. Before attempting a cross-player
+cheat again: check for `IPunObservable`/existing `[PunRPC]` on the target class first. If neither
+exists, the feature doesn't ship, full stop — surface that at design time rather than after
+building it.
+
+The UI half of that attempt is kept, though: `UIFactory.CreatePlayerSelectorBar` +
+`UI/Widgets/PlayerSlotToggle.cs` (tickable P2/P3/P4 chips, grayed out live when a slot isn't
+connected) and `PlayerCheats.OnlinePlayerSlots`/`.SelectedOnlinePlayers`/`.IsSlotConnected` are
+still in the repo, deliberately not called from anywhere. They're for a *future* cheat that can
+affect other players through some genuinely synced/authoritative mechanism (not a custom RPC
+requiring the mod on both ends) — if you find one, wire the selector bar into that cheat's panel
+and consult `SelectedOnlinePlayers` from its `OnExecute`, following the same shape
+`SetWalkSpeed`/`SetSprintSpeed` would have used.
+
+Session cap is 4 players either way, worth knowing for any *local-only* cheat that needs to
+reason about the session: slot 0 is unused, so valid `PlayerController` slots are 1-4, and
+whoever spawns first (the room creator) always claims slot 1 — every spawn-registration path in
+`PlayerController.cs` (`game_source`) assigns the first free slot starting from 1, so slot 1 is
+always the host.

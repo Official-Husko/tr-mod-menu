@@ -42,7 +42,7 @@ internal class RowSpec
         Note = note
     };
 
-    public static RowSpec Slider(string label, string iconName, float min, float max, float defaultValue, string format = "0.0", string note = null) => new()
+    public static RowSpec Slider(string label, string iconName, float min, float max, float defaultValue, string format = "0.0", Action<float> onExecute = null, string note = null) => new()
     {
         Label = label,
         IconName = iconName,
@@ -51,6 +51,7 @@ internal class RowSpec
         Max = max,
         DefaultFloat = defaultValue,
         Format = format,
+        OnExecute = onExecute,
         Note = note
     };
 
@@ -112,9 +113,8 @@ internal static class MenuCategories
             IconName = "player",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("God Mode", "shieldhalved"),
-                RowSpec.Toggle("Infinite Stamina", "bolt"),
-                RowSpec.Slider("Move Speed", "gaugehigh", 1f, 5f, 1f, "0.0\"x\""),
+                RowSpec.Slider("Walk Speed", "gaugehigh", 0.5f, 5f, 1f, "0.00\"x\"", PlayerCheats.SetWalkSpeed),
+                RowSpec.Slider("Sprint Speed", "bolt", 1f, 5f, 1.75f, "0.00\"x\"", PlayerCheats.SetSprintSpeed),
                 RowSpec.Toggle("Infinite Money", "sackdollar"),
                 RowSpec.NumberInput("Add Money", "handholdingdollar", 10000f, "0", PlayerCheats.AddMoney,
                     "e.g. 10250 = 1 gold, 2 silver, 50 copper. Negative values subtract.")

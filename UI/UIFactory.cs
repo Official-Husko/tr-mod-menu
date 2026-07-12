@@ -375,7 +375,10 @@ internal static class UIFactory
         toggle.OnValueChanged += v => onChanged?.Invoke(v);
     }
 
-    public static void CreateSliderRow(RectTransform parent, string label, string iconName, float min, float max, float defaultValue, string format, Action<float> onChanged, string note = null)
+    // `disabled` grays out the slider and blocks dragging without hiding the row -- same
+    // purpose as CreateNumberActionRow's `disabled`: show a real cheat exists but is currently
+    // blocked (e.g. by CompatibilityGate) rather than making it look like a no-op placeholder.
+    public static void CreateSliderRow(RectTransform parent, string label, string iconName, float min, float max, float defaultValue, string format, Action<float> onChanged, bool disabled = false, string note = null)
     {
         var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
@@ -407,6 +410,7 @@ internal static class UIFactory
         slider.minValue = min;
         slider.maxValue = max;
         slider.transition = Selectable.Transition.None;
+        slider.interactable = !disabled;
 
         var trackImg = CreatePanel(sliderRect, "Track", UITheme.Surface2, 160, 4);
         var trackRect = trackImg.rectTransform;
@@ -421,7 +425,7 @@ internal static class UIFactory
         fillAreaRect.offsetMin = Vector2.zero;
         fillAreaRect.offsetMax = Vector2.zero;
 
-        var fillImg = CreatePanel(fillAreaRect, "Fill", UITheme.Accent, 160, 4);
+        var fillImg = CreatePanel(fillAreaRect, "Fill", disabled ? UITheme.Surface2 : UITheme.Accent, 160, 4);
         var fillRect = fillImg.rectTransform;
         fillRect.anchorMin = new Vector2(0f, 0f);
         fillRect.anchorMax = new Vector2(1f, 1f);
@@ -431,14 +435,15 @@ internal static class UIFactory
 
         var handleAreaRect = CreateFullRect(sliderRect, "Handle Slide Area");
 
-        var handleImg = CreatePanel(handleAreaRect, "Handle", UITheme.Text, 10, 5);
+        var handleColor = disabled ? UITheme.MutedText : UITheme.Text;
+        var handleImg = CreatePanel(handleAreaRect, "Handle", handleColor, 10, 5);
         var handleRect = handleImg.rectTransform;
         handleRect.sizeDelta = new Vector2(10f, 10f);
         var handleHover = handleImg.gameObject.AddComponent<HoverEffect>();
         handleHover.TargetImage = handleImg;
-        handleHover.IdleColor = UITheme.Text;
-        handleHover.HoverColor = UITheme.AccentHover;
-        handleHover.SelectedColor = UITheme.AccentHover;
+        handleHover.IdleColor = handleColor;
+        handleHover.HoverColor = disabled ? handleColor : UITheme.AccentHover;
+        handleHover.SelectedColor = handleHover.HoverColor;
         slider.handleRect = handleRect;
         slider.targetGraphic = handleImg;
 
@@ -623,5 +628,77 @@ internal static class UIFactory
             float.TryParse(numberInput.text, out var value);
             onExecute?.Invoke(value);
         }, disabled);
+    }
+
+    // A row of tickable chips, one per online player slot, for "which connected players should
+    // this cheat also apply to." Chips gray themselves out (and can't be ticked) whenever that
+    // slot isn't occupied -- see PlayerSlotToggle, which polls connectivity live since a player
+    // can join/leave while the menu stays open. `disabled` forces every chip permanently gray
+    // (used when CompatibilityGate has cheats off entirely, since even checking slot occupancy
+    // touches the same obfuscated player-array machinery the gate exists to guard against).
+    //
+    // Not currently called anywhere -- kept as reusable infrastructure for a future cheat that
+    // can legitimately affect other connected players. See CLAUDE.md: "Cheats never target
+    // other online players" for why this isn't wired to the speed cheats.
+    public static void CreatePlayerSelectorBar(RectTransform parent, string label, string iconName, int[] playerNums, Func<int, bool> isConnected, Action<int, bool> onToggled, bool disabled = false)
+    {
+        var row = CreateRow(parent, iconName);
+        CreateRowLabel(row, label);
+
+        for (var i = 0; i < playerNums.Length; i++)
+        {
+            var num = playerNums[i];
+            var playerColor = UITheme.PlayerColors[i % UITheme.PlayerColors.Length];
+
+            var chipGo = new GameObject($"PlayerSlot_{num}", typeof(RectTransform));
+            chipGo.transform.SetParent(row, false);
+            var layoutEl = chipGo.AddComponent<LayoutElement>();
+            layoutEl.preferredWidth = 40f;
+            layoutEl.preferredHeight = 20f;
+
+            var img = chipGo.AddComponent<Image>();
+            img.sprite = UITheme.RoundedRect(40, 20, 6);
+            img.type = Image.Type.Sliced;
+            img.color = UITheme.Mantle;
+
+            // Small connection-status dot on the left, independent of the tick/selection state.
+            var dotGo = new GameObject("Dot", typeof(RectTransform));
+            dotGo.transform.SetParent(chipGo.transform, false);
+            var dotRect = (RectTransform)dotGo.transform;
+            dotRect.anchorMin = new Vector2(0f, 0.5f);
+            dotRect.anchorMax = new Vector2(0f, 0.5f);
+            dotRect.pivot = new Vector2(0.5f, 0.5f);
+            dotRect.sizeDelta = new Vector2(6f, 6f);
+            dotRect.anchoredPosition = new Vector2(8f, 0f);
+            var dotImg = dotGo.AddComponent<Image>();
+            dotImg.sprite = UITheme.RoundedRect(6, 6, 3);
+            dotImg.color = UITheme.StatusRed;
+            dotImg.raycastTarget = false;
+
+            var labelHandle = CreateLabel(chipGo.transform, $"P{num}", 11, UITheme.Border);
+            var labelRect = labelHandle.Graphic.rectTransform;
+            Stretch(labelRect);
+            labelRect.offsetMin = new Vector2(13f, 0f);
+            labelRect.offsetMax = new Vector2(-3f, 0f);
+            switch (labelHandle.Graphic)
+            {
+                case TextMeshProUGUI tmp:
+                    tmp.alignment = TextAlignmentOptions.Center;
+                    break;
+                case Text legacy:
+                    legacy.alignment = TextAnchor.MiddleCenter;
+                    break;
+            }
+
+            var slot = chipGo.AddComponent<PlayerSlotToggle>();
+            slot.PlayerNum = num;
+            slot.PlayerColor = playerColor;
+            slot.Background = img;
+            slot.Label = labelHandle.Graphic;
+            slot.Dot = dotImg;
+            slot.IsConnected = isConnected;
+            slot.OnToggled = onToggled;
+            slot.StaticallyDisabled = disabled;
+        }
     }
 }

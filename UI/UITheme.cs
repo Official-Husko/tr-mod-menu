@@ -18,6 +18,20 @@ internal static class UITheme
     public static readonly Color Green = Hex("#A6E3A1");
     public static readonly Color Red = Hex("#F38BA8");
 
+    // A more saturated, less pink-leaning red than Red above, specifically for the "not
+    // connected" status dot -- Catppuccin's own Red/Maroon are both too pastel to read as an
+    // unambiguous "red" status indicator next to Green.
+    public static readonly Color StatusRed = Hex("#EF4444");
+
+    // Distinct per-player identity colors for the online player selector (kept apart from
+    // Accent/Green/Red above, which already carry other meanings).
+    public static readonly Color[] PlayerColors =
+    {
+        Hex("#89B4FA"), // blue
+        Hex("#FAB387"), // peach
+        Hex("#94E2D5")  // teal
+    };
+
     public const int WindowWidth = 620;
     public const int WindowHeight = 420;
     public const int TitleBarHeight = 34;

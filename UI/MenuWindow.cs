@@ -167,6 +167,8 @@ internal class MenuWindow : MonoBehaviour
         {
             AddPanel(sidebarRect, contentRect, category.Name, category.IconName, rowList =>
             {
+                if (category.Name == "Online")
+                    BuildPlayerSelectorBar(rowList);
                 foreach (var row in category.Rows)
                     BuildDataRow(rowList, category.Name, row);
             });
@@ -217,8 +219,13 @@ internal class MenuWindow : MonoBehaviour
                     v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"), row.Note);
                 break;
             case RowKind.Slider:
+                // Same gating as NumberInput below -- a real cheat (row.OnExecute set) touches
+                // obfuscated game code and gets disabled on a version mismatch.
+                var sliderIsRealCheat = row.OnExecute != null;
+                var sliderBlocked = sliderIsRealCheat && !CompatibilityGate.CheatsEnabled;
                 UIFactory.CreateSliderRow(rowList, row.Label, row.IconName, row.Min, row.Max, row.DefaultFloat, row.Format,
-                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"), row.Note);
+                    row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}")),
+                    sliderBlocked, row.Note);
                 break;
             case RowKind.Dropdown:
                 UIFactory.CreateDropdownActionRow(rowList, row.Label, row.IconName, row.Options,
@@ -239,6 +246,26 @@ internal class MenuWindow : MonoBehaviour
                     blocked, row.Note);
                 break;
         }
+    }
+
+    // Always visible (not just when actually online) -- each chip grays itself out rather than
+    // the bar disappearing, so slots just read as "not connected" in solo play. Ticking a chip
+    // only records the selection (PlayerCheats.SelectedOnlinePlayers) for a future cheat to
+    // consume -- see CLAUDE.md: "Cheats never target other online players." Disabled outright
+    // under a version mismatch, same as every row that reaches into the game's obfuscated
+    // player-array machinery.
+    private static void BuildPlayerSelectorBar(RectTransform rowList)
+    {
+        UIFactory.CreatePlayerSelectorBar(rowList, "Apply To Players", "online", PlayerCheats.OnlinePlayerSlots,
+            PlayerCheats.IsSlotConnected,
+            (num, selected) =>
+            {
+                if (selected)
+                    PlayerCheats.SelectedOnlinePlayers.Add(num);
+                else
+                    PlayerCheats.SelectedOnlinePlayers.Remove(num);
+            },
+            !CompatibilityGate.CheatsEnabled);
     }
 
     private void BuildSettingsPanel(RectTransform rowList, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)

@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>tr_mod_menu</AssemblyName>
     <Product>My first plugin</Product>
-    <Version>1.0.18</Version>
+    <Version>1.0.22</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -45,6 +45,11 @@
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(GameManagedDir)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Photon.Pun.PhotonView, for PlayerCheats.LocalPlayer's IsMine check. -->
+    <Reference Include="PhotonUnityNetworking">
+      <HintPath>$(GameManagedDir)/PhotonUnityNetworking.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
