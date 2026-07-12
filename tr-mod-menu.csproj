@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>tr_mod_menu</AssemblyName>
-    <Product>My first plugin</Product>
-    <Version>1.0.23</Version>
+    <Product>TR Mod Menu</Product>
+    <Version>1.0.26</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>

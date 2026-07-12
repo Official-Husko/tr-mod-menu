@@ -283,3 +283,134 @@ real character creator once it opens. `RowSpec.CloseMenuAfter = true` on a butto
 menu right after running its `OnExecute`, via a `CloseRequested` action `MenuController` wires to
 its existing `CloseMenu()`. Any future cheat that opens another piece of the game's own full-screen
 UI should set the same flag rather than trying to reorder canvas sort order.
+
+### Force-completing quests/missions/orders (`Cheats/QuestCheats.cs`)
+
+The game has three separate active-task systems that all read as "quests" to a player but live
+in different managers, each with a different completion story:
+
+- **Side Missions** (`MissionsManager`) have a genuine clean, public, static single entry point:
+  `MissionsManager.CompleteMission(int missionId)`. It marks every objective complete then runs
+  the mission's own finish logic (rewards, linked-mission chaining) -- not a parallel/reimplemented
+  path. Enumerate via the clean `MissionsManager.instance.activeMissions` list. While online, the
+  underlying objective-completion step already fires a Photon RPC to other clients
+  (`OnlineMissionsManager.SendCompleteObjective` -> `[PunRPC] ReceiveCompleteObjective`, which runs
+  the identical local completion logic on their end), so this **genuinely syncs** without requiring
+  the mod on the other end -- satisfies "Cheats never target other online players" above by riding
+  a mechanism the game already has, not a custom RPC. One base-game quirk worth knowing (not
+  something this introduces): `ActiveMission.triggerPlayerNum` is never set to anything but `1`
+  anywhere in the shipped code, so mission rewards always land in player slot 1's inventory
+  regardless of who actually completes it.
+- **Tavern Orders** (`RandomOrderQuestsManager`) are not a separate data model -- they're ordinary
+  `Quest`/`ActiveQuest` instances living in `QuestManager`'s own list, just filtered by `id == 0`
+  (order quests are runtime-generated, so they share a placeholder id) and `is CraftItemTypeQuest`.
+  `RandomOrderQuestsManager.CompleteOrderQuest(playerNum, orderIndex)` is clean and public, but
+  unlike the vanilla "hand in ingredients" path (`TryToCompleteOrder`) it does **not** send the
+  online RPC itself -- call `OnlineOrderQuestsManager.instance.SendCompleteOrderQuest(orderIndex)`
+  (also clean) right after, the same RPC the vanilla path fires, so this syncs too without a custom
+  RPC. Completing an order removes it from `QuestManager`'s list as a side effect (confirmed by
+  reading `QuestManager.AddQuest`, which wires every quest it creates -- orders included -- to
+  remove itself from the active list via its own `OnQuestComplete` event), which shifts every later
+  index. `CompleteAllOrders` therefore completes **highest-index-first** so already-processed
+  indices don't shift out from under the loop, and sends the matching online RPC in that same
+  order so the other client's mirrored list shifts identically on both ends.
+- **Main story/board Quests** (`QuestManager` directly, `id != 0`) have no clean top-level
+  wrapper -- every quest subtype funnels through `ActiveQuest.JGNBGECEINP(playerNum)` (obfuscated,
+  but confirmed as the real, single, type-agnostic completion point: it's exactly what the game's
+  own `DevConsole.cs` calls for its "Complete quest" command, including a "complete every active
+  quest" variant that explicitly skips `id == 0` -- matched in `CompleteAllQuests` for the same
+  reason, since orders are handled separately above). Critically, `OnlineQuestManager` only has
+  RPCs for "add quest" and "progress quest" -- **there is no "complete quest" RPC anywhere in the
+  assembly**. So this cheat is local-only: it finishes the quest on your own client, but another
+  connected player's copy of that same quest keeps showing as open on their screen. That's
+  disclosed in the row's note text rather than silently shipped as if it were networked.
+
+`PlayerCheats.LocalPlayer()` was widened from `private` to `internal` so `QuestCheats` can reuse
+the exact same safe local-player lookup instead of re-scanning `FindObjectsByType` itself.
+
+**Real bug found via this feature**: the very first quest a new save gets ("First Customers",
+quest id 1, granted by `SceneReferences.LOLAFOECMGP()` / "New Game Setup") looked like it
+completed when `CompleteAllQuests` ran, but stayed in the quest log. Root cause: `QuestManager.
+AddQuest` special-cases `id == 1` with a shortcut that skips the wiring every *other* quest gets
+(`OnQuestComplete += RemoveQuest`) -- so `JGNBGECEINP` still runs fine (rewards, sound, events)
+but nothing ever takes quest id 1 out of `MADOFDHLKKN`, and `GetDisplayedQuest()` only filters on
+`quest.showGoal`, not `ActiveQuest.active`, so it keeps showing as open. In normal play, id 1 is
+only ever cleared as a side effect of quest id 3 being granted later, via a direct
+`RemoveQuest(Quest)` call in that same `AddQuest` method. Fix: after calling `JGNBGECEINP`, check
+whether the quest is still in `MADOFDHLKKN` and, if so, call `QuestManager.RemoveQuest(Quest)`
+ourselves to force it out -- mirroring exactly what the id-3 special case does. Note
+`RemoveQuest(Quest)` itself has no null check if the quest isn't found in the list (`MADOFDHLKKN.
+Find(...)` can return `null`, then it's dereferenced unconditionally) -- same class of bug as
+`HGJCFHPNFBI()` above -- so it's only called after confirming the quest is still present, never
+unconditionally. Lesson, same as the `HGJCFHPNFBI` case: a "single completion method" isn't
+always uniform across every id: check whether the caller of that method (here, `AddQuest`) special-cases specific ids before assuming completion behaves identically for all of them.
+
+### Host-authoritative cheats (`Cheats/WorldCheats.cs`, Time Scale)
+
+Not every "can this sync online" question is a flat yes/no like the walk-speed case above. Time
+Scale (`WorldCheats.SetTimeScale`, World tab) is a third category: a cheat that **does** ride the
+game's own existing sync -- no custom RPC, no dependency on the target running the mod -- but only
+takes effect for the whole session when applied by whoever's *authoritative* for that state.
+`WorldTime` is a networked singleton (`[RequireComponent(PhotonView)]`, `IPunObservable`): the
+room host owns the view and is the one "IsWriting" in `OnPhotonSerializeView`, broadcasting its
+own computed elapsed-time value to everyone else every sync tick; a non-host client's own locally
+computed time gets overwritten by that broadcast almost immediately. So setting the multiplier
+genuinely propagates to the whole session, but only when done by the host -- a non-host client's
+attempt is not "blocked" by anything, it just gets silently stomped by the next incoming sync
+packet, which would look like the cheat doing nothing.
+
+Two more things worth remembering from this one:
+
+- **Two multiplier fields exist on `WorldTime` on purpose.** `multiplier` is the game's own, and
+  its real per-frame `Update()` silently snaps it back to `0`/`1` based on dialogue/sleep state --
+  setting *that* directly to freeze time gets overwritten within a single frame. `multiplierDevConsole`
+  is a second, clean public field that exists specifically so a cheat/dev-console override doesn't
+  fight that auto-correction -- it's what the game's own `DevConsole` "World Time ##" command sets.
+  When a value you want to force keeps getting reset, check whether the surrounding `Update()`
+  loop has its own opinion about that same field before assuming the field itself is broken.
+- **A cheat that's only sometimes valid needs a *live*, not build-once, disabled check.** Host
+  status can change while the menu stays open (join/leave a session, host migration) -- unlike
+  `CompatibilityGate` (checked once at startup, since a game-version mismatch can't change
+  mid-session), this needed a control that re-evaluates periodically. `UI/Widgets/HostOnlySlider.cs`
+  polls `OnlineManager.MasterOrOffline()` every 0.5s (same cadence as `PlayerSlotToggle`'s
+  connectivity poll) and live-updates `Slider.interactable` plus the fill/handle colors to match.
+  It deliberately never touches the handle `Image.color` directly -- the handle already has its
+  own `HoverEffect` running its own per-frame color Lerp, and two components independently
+  Lerp-ing the same `Image.color` toward different targets fight each other every frame. Wire a
+  new host-only slider via `RowSpec.Slider(..., hostOnly: true)`, not by hand-building the gate.
+
+### Perk points aren't a stored currency (`Cheats/TavernCheats.cs`, Add Perk Points)
+
+What players call "perk points" is `TavernReputation`'s "skill points", spent on the **Talents**
+tree (`TalentUI`/`TalentDatabaseAccessor` -- that's the game's real name for it, in both the UI
+and `DevConsole`'s "Talents" command). Don't confuse this with the *other*, unrelated system that
+happens to have "Perk" in several class names (`PerkTreeUI`/`PlayerPerksUI`/`PerkSlotUI`/
+`EmployeePerk`) -- that one assigns perks to hired employees, not the player.
+
+`TavernReputation.GetRemainingSkillPoints()` is derived, not stored: `GetMilestone() - <points
+already spent across unlocked talents>`. There's no "add N points" method to call -- the only way
+to grant more is to advance the milestone itself, via `TavernReputation.NextMilestone()` (clean,
+public, static). Confirmed by reading it that this isn't a reimplementation: it's the literal
+method the game calls when reputation naturally crosses a threshold, so calling it grants the same
+recipe-fragment reward a real milestone-up gives, for free, as a side effect -- expected, not a
+bug, since it's the same code path.
+
+Third variant of the "does this sync online" question this session has now hit: like `WorldTime`,
+`NextMilestone()` rides the game's own existing RPC (`OnlineReputationManager`, host-gated inside
+the method itself) rather than a custom one -- but *unlike* `WorldTime` (a continuously-broadcast
+networked object where a non-host's local change gets overwritten within moments), `TavernReputation`
+is a plain per-client singleton kept in sync only via discrete RPC messages. A non-host caller's
+`NextMilestone()` simply never sends the RPC (the guard inside the method itself fails silently),
+which permanently desyncs their own local view from the shared truth until the next *real*
+milestone corrects it -- worse than `WorldTime`'s "briefly stomped," not better, so it gets the
+same host-only gating (`RowSpec.NumberInput(..., hostOnly: true)`, extending the exact same
+live-disable treatment to number-input rows via the new `UI/Widgets/HostOnlyNumberRow.cs`, sibling
+to `HostOnlySlider`).
+
+One more overshoot check worth recording: the milestone's own property setter already clamps to
+`RepUnlocksManager.MaxMilstone` (confirmed by reading it), so repeated calls can't push it out of
+range -- but `NextMilestone()` still unconditionally grants its recipe-fragment reward and fires
+its RPC on *every* call regardless of whether the clamp actually changed anything. `AddPerkPoints`
+therefore stops looping once already at the cap instead of trusting the clamp alone, to avoid
+handing out free, unbounded recipe fragments as an unintended side effect of a big "add points"
+number.

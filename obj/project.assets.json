@@ -975,7 +975,7 @@
     "/home/pawbeans/.nuget/packages/": {}
   },
   "project": {
-    "version": "1.0.23",
+    "version": "1.0.26",
     "restore": {
       "projectUniqueName": "/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/tr-mod-menu.csproj",
       "projectName": "tr_mod_menu",

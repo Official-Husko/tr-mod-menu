@@ -38,6 +38,14 @@ internal class RowSpec
     // (e.g. the character creator) isn't stuck behind our overlay/backdrop.
     public bool CloseMenuAfter;
 
+    // Slider/NumberInput rows only: this cheat only takes effect for the whole session when
+    // applied by whoever's authoritative for the state it touches (e.g. WorldTime or
+    // TavernReputation, both host-owned/host-broadcast). The row stays visible but its control is
+    // live-disabled (re-checked while the menu is open, not just once at build time) whenever
+    // OnlineManager.MasterOrOffline() is false -- i.e. we're online and not the host. See
+    // UI/Widgets/HostOnlySlider.cs and UI/Widgets/HostOnlyNumberRow.cs.
+    public bool HostOnly;
+
     public static RowSpec Toggle(string label, string iconName, bool defaultValue = false, string note = null) => new()
     {
         Label = label,
@@ -47,7 +55,7 @@ internal class RowSpec
         Note = note
     };
 
-    public static RowSpec Slider(string label, string iconName, float min, float max, float defaultValue, string format = "0.0", Action<float> onExecute = null, string note = null) => new()
+    public static RowSpec Slider(string label, string iconName, float min, float max, float defaultValue, string format = "0.0", Action<float> onExecute = null, string note = null, bool hostOnly = false) => new()
     {
         Label = label,
         IconName = iconName,
@@ -57,7 +65,8 @@ internal class RowSpec
         DefaultFloat = defaultValue,
         Format = format,
         OnExecute = onExecute,
-        Note = note
+        Note = note,
+        HostOnly = hostOnly
     };
 
     // Pick an option from a dropdown, then click Execute to apply it.
@@ -83,7 +92,7 @@ internal class RowSpec
     };
 
     // Type a number, then click Execute.
-    public static RowSpec NumberInput(string label, string iconName, float defaultValue, string format = "0", Action<float> onExecute = null, string note = null) => new()
+    public static RowSpec NumberInput(string label, string iconName, float defaultValue, string format = "0", Action<float> onExecute = null, string note = null, bool hostOnly = false) => new()
     {
         Label = label,
         IconName = iconName,
@@ -91,7 +100,8 @@ internal class RowSpec
         DefaultFloat = defaultValue,
         Format = format,
         OnExecute = onExecute,
-        Note = note
+        Note = note,
+        HostOnly = hostOnly
     };
 
     // Just a label + Execute button, no input of its own -- for one-shot actions.
@@ -171,7 +181,12 @@ internal static class MenuCategories
                 RowSpec.Toggle("Instant Barrel Aging", "hourglasshalf"),
                 RowSpec.Toggle("Max Tavern Reputation", "star"),
                 RowSpec.Slider("Service Speed", "gaugehigh", 1f, 5f, 1f, "0.0\"x\""),
-                RowSpec.Slider("Tavern XP Multiplier", "arrowtrendup", 1f, 10f, 1f, "0.0\"x\"")
+                RowSpec.Slider("Tavern XP Multiplier", "arrowtrendup", 1f, 10f, 1f, "0.0\"x\""),
+                RowSpec.Button("Complete All Orders", "receipt", QuestCheats.CompleteAllOrders,
+                    note: "Instantly hands in every active tavern order. Syncs to other online players."),
+                RowSpec.NumberInput("Add Perk Points", "brain", 1f, "0", TavernCheats.AddPerkPoints,
+                    "Grants Talent tree skill points by advancing the reputation milestone (same as reaching it normally). Only takes effect for the whole session when you're the host (or playing solo) -- disabled otherwise.",
+                    hostOnly: true)
             }
         },
         new CategorySpec
@@ -180,8 +195,9 @@ internal static class MenuCategories
             IconName = "world",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Freeze Time of Day", "snowflake"),
-                RowSpec.Slider("Time Scale", "clockrotateleft", 0f, 5f, 1f, "0.0\"x\""),
+                RowSpec.Slider("Time Scale", "clockrotateleft", 0f, 5f, WorldTime.multiplierDevConsole, "0.0\"x\"", WorldCheats.SetTimeScale,
+                    "0x freezes the clock, up to 5x fast-forwards it. Only takes effect for the whole session when you're the host (or playing solo) -- disabled otherwise.",
+                    hostOnly: true),
                 RowSpec.Toggle("Disable Weather", "ban"),
                 RowSpec.Dropdown("Set Weather", "cloud", new List<string> { "Sunny", "Rain", "Snow", "Cloudy", "Wind" })
             }
@@ -193,7 +209,11 @@ internal static class MenuCategories
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("Noclip", "ghost"),
-                RowSpec.Toggle("Unlock All Recipes", "bookopen")
+                RowSpec.Toggle("Unlock All Recipes", "bookopen"),
+                RowSpec.Button("Complete All Missions", "listcheck", QuestCheats.CompleteAllMissions,
+                    note: "Instantly finishes every active side mission. Syncs to other online players."),
+                RowSpec.Button("Complete All Quests", "scroll", QuestCheats.CompleteAllQuests,
+                    note: "Instantly finishes every active story/board quest. Local only -- other players still see them as open.")
             }
         }
     };

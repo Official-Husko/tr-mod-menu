@@ -71,7 +71,9 @@ internal static class PlayerCheats
     // see CLAUDE.md.
     private static PlayerController _cachedLocalPlayer;
 
-    private static PlayerController LocalPlayer()
+    // internal, not private: QuestCheats reuses this same safe lookup rather than
+    // re-scanning FindObjectsByType itself.
+    internal static PlayerController LocalPlayer()
     {
         if (_cachedLocalPlayer != null)
             return _cachedLocalPlayer;

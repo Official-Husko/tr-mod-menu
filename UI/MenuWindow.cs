@@ -230,7 +230,7 @@ internal class MenuWindow : MonoBehaviour
                 var sliderBlocked = sliderIsRealCheat && !CompatibilityGate.CheatsEnabled;
                 UIFactory.CreateSliderRow(rowList, row.Label, row.IconName, row.Min, row.Max, row.DefaultFloat, row.Format,
                     row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}")),
-                    sliderBlocked, row.Note);
+                    sliderBlocked, row.Note, row.HostOnly ? OnlineManager.MasterOrOffline : null);
                 break;
             case RowKind.Dropdown:
                 UIFactory.CreateDropdownActionRow(rowList, row.Label, row.IconName, row.Options,
@@ -248,7 +248,7 @@ internal class MenuWindow : MonoBehaviour
                 var blocked = isRealCheat && !CompatibilityGate.CheatsEnabled;
                 UIFactory.CreateNumberActionRow(rowList, row.Label, row.IconName, row.DefaultFloat, row.Format,
                     row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with {v.ToString(row.Format)}")),
-                    blocked, row.Note);
+                    blocked, row.Note, row.HostOnly ? OnlineManager.MasterOrOffline : null);
                 break;
             case RowKind.Button:
                 // Same gating as the other real-cheat rows above.

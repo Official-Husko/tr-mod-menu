@@ -378,7 +378,7 @@ internal static class UIFactory
     // `disabled` grays out the slider and blocks dragging without hiding the row -- same
     // purpose as CreateNumberActionRow's `disabled`: show a real cheat exists but is currently
     // blocked (e.g. by CompatibilityGate) rather than making it look like a no-op placeholder.
-    public static void CreateSliderRow(RectTransform parent, string label, string iconName, float min, float max, float defaultValue, string format, Action<float> onChanged, bool disabled = false, string note = null)
+    public static void CreateSliderRow(RectTransform parent, string label, string iconName, float min, float max, float defaultValue, string format, Action<float> onChanged, bool disabled = false, string note = null, Func<bool> liveEnabledCheck = null)
     {
         var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
@@ -457,6 +457,18 @@ internal static class UIFactory
             valueLabel.SetText(v.ToString(format));
             onChanged?.Invoke(v);
         });
+
+        // liveEnabledCheck is for state that can change while the menu stays open (e.g. host
+        // status) -- disabled/CompatibilityGate above already covers the static, checked-once
+        // case, so this only attaches on top of an otherwise-enabled row.
+        if (!disabled && liveEnabledCheck != null)
+        {
+            var gate = sliderGo.AddComponent<HostOnlySlider>();
+            gate.Slider = slider;
+            gate.Fill = fillImg;
+            gate.HandleHover = handleHover;
+            gate.IsAllowed = liveEnabledCheck;
+        }
     }
 
     private static SimpleDropdown CreateDropdown(RectTransform parent, List<string> options, int defaultIndex, float width)
@@ -540,7 +552,21 @@ internal static class UIFactory
         return inputField;
     }
 
-    private static void AddExecuteButton(RectTransform row, Action onClick, bool disabled = false)
+    private readonly struct ExecuteButtonRefs
+    {
+        public readonly Button Button;
+        public readonly HoverEffect Hover;
+        public readonly Graphic Label;
+
+        public ExecuteButtonRefs(Button button, HoverEffect hover, Graphic label)
+        {
+            Button = button;
+            Hover = hover;
+            Label = label;
+        }
+    }
+
+    private static ExecuteButtonRefs AddExecuteButton(RectTransform row, Action onClick, bool disabled = false)
     {
         var go = new GameObject("Execute", typeof(RectTransform));
         go.transform.SetParent(row, false);
@@ -578,6 +604,8 @@ internal static class UIFactory
                 legacy.alignment = TextAnchor.MiddleCenter;
                 break;
         }
+
+        return new ExecuteButtonRefs(button, hover, label.Graphic);
     }
 
     // Pick an option, click Execute.
@@ -612,7 +640,7 @@ internal static class UIFactory
     // Type a number, click Execute. `disabled` grays out the field and button without
     // hiding the row -- used to show a real cheat exists but is currently blocked
     // (e.g. by CompatibilityGate) rather than making it look like a no-op placeholder.
-    public static void CreateNumberActionRow(RectTransform parent, string label, string iconName, float defaultValue, string format, Action<float> onExecute, bool disabled = false, string note = null)
+    public static void CreateNumberActionRow(RectTransform parent, string label, string iconName, float defaultValue, string format, Action<float> onExecute, bool disabled = false, string note = null, Func<bool> liveEnabledCheck = null)
     {
         var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
@@ -623,11 +651,23 @@ internal static class UIFactory
 
         numberInput.interactable = !disabled;
 
-        AddExecuteButton(row, () =>
+        var buttonRefs = AddExecuteButton(row, () =>
         {
             float.TryParse(numberInput.text, out var value);
             onExecute?.Invoke(value);
         }, disabled);
+
+        // Same reasoning as CreateSliderRow's liveEnabledCheck -- state that can change while the
+        // menu stays open (e.g. host status), on top of the static/checked-once disabled above.
+        if (!disabled && liveEnabledCheck != null)
+        {
+            var gate = numberInput.gameObject.AddComponent<HostOnlyNumberRow>();
+            gate.NumberInput = numberInput;
+            gate.ExecuteButton = buttonRefs.Button;
+            gate.ExecuteHover = buttonRefs.Hover;
+            gate.ExecuteLabel = buttonRefs.Label;
+            gate.IsAllowed = liveEnabledCheck;
+        }
     }
 
     // A row of tickable chips, one per online player slot, for "which connected players should
