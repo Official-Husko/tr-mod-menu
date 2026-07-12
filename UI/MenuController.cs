@@ -68,6 +68,7 @@ internal class MenuController : MonoBehaviour
         CompatibilityGate.Check();
 
         _window = MenuWindow.Create(canvasRoot, _toggleKey, uiScale);
+        _window.CloseRequested = CloseMenu;
         _window.Close(instant: true);
 
         // Shown immediately (not gated behind opening the menu) so the player sees it even if

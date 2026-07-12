@@ -16,6 +16,11 @@ internal class MenuWindow : MonoBehaviour
     private Coroutine _animCoroutine;
     private float _uiScale = 1f;
 
+    // Set by MenuController right after construction. Button rows with CloseMenuAfter use this
+    // to dismiss the whole menu -- needed for anything that opens the game's own UI (e.g. the
+    // character creator), since our backdrop would otherwise block it.
+    public Action CloseRequested;
+
     private readonly List<SidebarTab> _tabs = new();
     private readonly List<GameObject> _categoryPanels = new();
 
@@ -210,7 +215,7 @@ internal class MenuWindow : MonoBehaviour
         _categoryPanels.Add(panelRect.gameObject);
     }
 
-    private static void BuildDataRow(RectTransform rowList, string categoryName, RowSpec row)
+    private void BuildDataRow(RectTransform rowList, string categoryName, RowSpec row)
     {
         switch (row.Kind)
         {
@@ -244,6 +249,17 @@ internal class MenuWindow : MonoBehaviour
                 UIFactory.CreateNumberActionRow(rowList, row.Label, row.IconName, row.DefaultFloat, row.Format,
                     row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with {v.ToString(row.Format)}")),
                     blocked, row.Note);
+                break;
+            case RowKind.Button:
+                // Same gating as the other real-cheat rows above.
+                var buttonIsRealCheat = row.OnExecute != null;
+                var buttonBlocked = buttonIsRealCheat && !CompatibilityGate.CheatsEnabled;
+                UIFactory.CreateButtonRow(rowList, row.Label, row.IconName, () =>
+                {
+                    (row.OnExecute ?? (_ => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed")))(0f);
+                    if (row.CloseMenuAfter)
+                        CloseRequested?.Invoke();
+                }, buttonBlocked, row.Note);
                 break;
         }
     }

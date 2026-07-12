@@ -109,4 +109,28 @@ internal static class PlayerCheats
         player.sprintMultiplier = Mathf.Max(0f, multiplier);
         Plugin.Logger.LogInfo($"[Cheats] Sprint Speed multiplier -> {player.sprintMultiplier:0.00}");
     }
+
+    // CharacterCreatorUI is the game's own character-appearance editor -- the exact same window
+    // a Wardrobe object opens mid-game. Confirmed in game_source/Wardrobe.cs: its MouseUp() does
+    // precisely this: `CharacterCreatorUI.loadGame = null; CharacterCreatorUI.Get(playerNum).OpenUI();`.
+    // We trigger the identical entry point and then get out of the way (see RowSpec.CloseMenuAfter
+    // in MenuCategories.cs, which closes our own menu so its backdrop doesn't block the real UI)
+    // -- the player uses the REAL, unmodified game UI (sliders, gender/hair/etc. cycling, Accept,
+    // Cancel) to make and confirm changes. Confirmed by reading CharacterCreatorUI.AcceptButton():
+    // once the game/world has actually started (as it always will be when our mod menu is up),
+    // it takes the simple `SetCharacter(playerNum); CloseUI();` path -- SetCharacter copies the
+    // edited appearance onto the live PlayerController and fires OnCharacterConfirm(). There is
+    // nothing else for us to implement: whatever save/online-sync behavior the game normally has
+    // for a Wardrobe visit applies here unchanged, since it's the identical code path -- closing
+    // without clicking Accept discards changes, same as a real Wardrobe.
+    public static void OpenCharacterEditor()
+    {
+        var player = LocalPlayer();
+        if (player == null)
+            return;
+
+        CharacterCreatorUI.loadGame = null;
+        CharacterCreatorUI.Get(player.playerNum).OpenUI();
+        Plugin.Logger.LogInfo("[Cheats] Opened character editor -- click Accept inside it to save your changes.");
+    }
 }

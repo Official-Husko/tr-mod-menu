@@ -701,4 +701,12 @@ internal static class UIFactory
             slot.StaticallyDisabled = disabled;
         }
     }
+
+    // Just a label + Execute button, no input control of its own -- for one-shot actions.
+    public static void CreateButtonRow(RectTransform parent, string label, string iconName, Action onExecute, bool disabled = false, string note = null)
+    {
+        var row = CreateRow(parent, iconName, note);
+        CreateRowLabel(row, label);
+        AddExecuteButton(row, onExecute, disabled);
+    }
 }

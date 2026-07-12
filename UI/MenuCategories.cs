@@ -10,7 +10,8 @@ internal enum RowKind
     Slider,
     Dropdown,
     DropdownAmount,
-    NumberInput
+    NumberInput,
+    Button
 }
 
 internal class RowSpec
@@ -32,6 +33,10 @@ internal class RowSpec
     // Most rows are still inert placeholders logged by MenuWindow.BuildDataRow. A row that's
     // been wired to a real game system (see Cheats/) sets this to override that placeholder.
     public Action<float> OnExecute;
+
+    // Button rows only: close the whole mod menu right after executing, so the game's own UI
+    // (e.g. the character creator) isn't stuck behind our overlay/backdrop.
+    public bool CloseMenuAfter;
 
     public static RowSpec Toggle(string label, string iconName, bool defaultValue = false, string note = null) => new()
     {
@@ -88,6 +93,17 @@ internal class RowSpec
         OnExecute = onExecute,
         Note = note
     };
+
+    // Just a label + Execute button, no input of its own -- for one-shot actions.
+    public static RowSpec Button(string label, string iconName, Action onExecute, bool closeMenuAfter = false, string note = null) => new()
+    {
+        Label = label,
+        IconName = iconName,
+        Kind = RowKind.Button,
+        OnExecute = onExecute == null ? null : (_ => onExecute()),
+        CloseMenuAfter = closeMenuAfter,
+        Note = note
+    };
 }
 
 internal class CategorySpec
@@ -117,7 +133,9 @@ internal static class MenuCategories
                 RowSpec.Slider("Sprint Speed", "bolt", 1f, 5f, 1.75f, "0.00\"x\"", PlayerCheats.SetSprintSpeed),
                 RowSpec.Toggle("Infinite Money", "sackdollar"),
                 RowSpec.NumberInput("Add Money", "handholdingdollar", 10000f, "0", PlayerCheats.AddMoney,
-                    "e.g. 10250 = 1 gold, 2 silver, 50 copper. Negative values subtract.")
+                    "e.g. 10250 = 1 gold, 2 silver, 50 copper. Negative values subtract."),
+                RowSpec.Button("Open Character Editor", "userpen", PlayerCheats.OpenCharacterEditor, closeMenuAfter: true,
+                    "Opens the game's own character creator (same as using a Wardrobe). Click Accept inside it to save.")
             }
         },
         new CategorySpec

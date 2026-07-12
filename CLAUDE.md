@@ -262,3 +262,24 @@ reason about the session: slot 0 is unused, so valid `PlayerController` slots ar
 whoever spawns first (the room creator) always claims slot 1 — every spawn-registration path in
 `PlayerController.cs` (`game_source`) assigns the first free slot starting from 1, so slot 1 is
 always the host.
+
+### Reusing the game's own UI instead of building one
+
+`PlayerCheats.OpenCharacterEditor()` (the "Open Character Editor" button, Player tab) is an
+example of the cheapest and most correct way to expose a game feature: find the object that
+already triggers it and call the same entry point, rather than reimplementing any UI or save
+logic ourselves. The character creator is normally opened by walking up to a Wardrobe; grepping
+`game_source/Wardrobe.cs` shows its `MouseUp()` does exactly
+`CharacterCreatorUI.loadGame = null; CharacterCreatorUI.Get(playerNum).OpenUI();` — both clean
+public members. Calling that directly from our button gets the *exact* real character creator
+(sliders, cycling, Accept/Cancel), with all of its save/confirm behavior (`AcceptButton()` ->
+`SetCharacter(playerNum); CloseUI();`) unchanged, for zero extra code. This only works because a
+Wardrobe is a plain trigger with no extra state to fake — for a feature like this, check whether
+the game already has a "press button, thing happens" object before writing any bespoke UI.
+
+This is also the reason `RowSpec.Button`/`RowKind.Button` and `MenuWindow.CloseRequested` exist:
+our own menu's backdrop (`raycastTarget=true`, drawn above everything) would otherwise block the
+real character creator once it opens. `RowSpec.CloseMenuAfter = true` on a button row closes our
+menu right after running its `OnExecute`, via a `CloseRequested` action `MenuController` wires to
+its existing `CloseMenu()`. Any future cheat that opens another piece of the game's own full-screen
+UI should set the same flag rather than trying to reorder canvas sort order.
