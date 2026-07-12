@@ -201,15 +201,31 @@ internal class MenuWindow : MonoBehaviour
 
     private static void BuildDataRow(RectTransform rowList, string categoryName, RowSpec row)
     {
-        if (row.Kind == RowKind.Toggle)
+        switch (row.Kind)
         {
-            UIFactory.CreateToggleRow(rowList, row.Label, row.DefaultBool,
-                v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"));
-        }
-        else
-        {
-            UIFactory.CreateSliderRow(rowList, row.Label, row.Min, row.Max, row.DefaultFloat, row.Format,
-                v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"));
+            case RowKind.Toggle:
+                UIFactory.CreateToggleRow(rowList, row.Label, row.DefaultBool,
+                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"));
+                break;
+            case RowKind.Slider:
+                UIFactory.CreateSliderRow(rowList, row.Label, row.Min, row.Max, row.DefaultFloat, row.Format,
+                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"));
+                break;
+            case RowKind.Dropdown:
+                UIFactory.CreateDropdownActionRow(rowList, row.Label, row.Options,
+                    i => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}'"));
+                break;
+            case RowKind.DropdownAmount:
+                UIFactory.CreateDropdownAmountActionRow(rowList, row.Label, row.Options, row.DefaultFloat, row.Format,
+                    (i, amount) => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}' x{amount.ToString(row.Format)}"));
+                break;
+            case RowKind.NumberInput:
+                UIFactory.CreateNumberActionRow(rowList, row.Label, row.DefaultFloat, row.Format,
+                    row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with {v.ToString(row.Format)}")));
+                break;
+            case RowKind.Note:
+                UIFactory.CreateNoteRow(rowList, row.Label);
+                break;
         }
     }
 

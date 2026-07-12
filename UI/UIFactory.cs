@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using tr_mod_menu.UI.Widgets;
 using UnityEngine;
@@ -235,6 +236,14 @@ internal static class UIFactory
         layoutEl.flexibleWidth = 1;
     }
 
+    public static void CreateNoteRow(RectTransform parent, string text)
+    {
+        var row = CreateRow(parent);
+        var label = CreateLabel(row, text, 10, UITheme.MutedText);
+        var layoutEl = label.Graphic.gameObject.AddComponent<LayoutElement>();
+        layoutEl.flexibleWidth = 1;
+    }
+
     public static void CreateInfoRow(RectTransform parent, string label, string value)
     {
         var row = CreateRow(parent);
@@ -395,6 +404,170 @@ internal static class UIFactory
         {
             valueLabel.SetText(v.ToString(format));
             onChanged?.Invoke(v);
+        });
+    }
+
+    private static SimpleDropdown CreateDropdown(RectTransform parent, List<string> options, int defaultIndex, float width)
+    {
+        var ddGo = new GameObject("Dropdown", typeof(RectTransform));
+        ddGo.transform.SetParent(parent, false);
+        var ddLayoutEl = ddGo.AddComponent<LayoutElement>();
+        ddLayoutEl.preferredWidth = width;
+        ddLayoutEl.preferredHeight = 20f;
+
+        var ddImg = ddGo.AddComponent<Image>();
+        ddImg.sprite = UITheme.RoundedRect(40, 20, 6);
+        ddImg.type = Image.Type.Sliced;
+        ddImg.color = UITheme.Surface2;
+
+        var captionLabel = CreateLabel(ddGo.transform, options.Count > 0 ? options[defaultIndex] : "", 12, UITheme.Text);
+        var captionRect = captionLabel.Graphic.rectTransform;
+        Stretch(captionRect);
+        captionRect.offsetMin = new Vector2(8f, 0f);
+        captionRect.offsetMax = new Vector2(-18f, 0f);
+
+        var arrow = Icons.Load("chevrondown");
+        if (arrow != null)
+        {
+            var arrowGo = new GameObject("Arrow", typeof(RectTransform));
+            arrowGo.transform.SetParent(ddGo.transform, false);
+            var arrowRect = (RectTransform)arrowGo.transform;
+            arrowRect.anchorMin = new Vector2(1f, 0.5f);
+            arrowRect.anchorMax = new Vector2(1f, 0.5f);
+            arrowRect.pivot = new Vector2(1f, 0.5f);
+            arrowRect.sizeDelta = new Vector2(9f, 9f);
+            arrowRect.anchoredPosition = new Vector2(-7f, 0f);
+            var arrowImg = arrowGo.AddComponent<Image>();
+            arrowImg.sprite = arrow;
+            arrowImg.color = UITheme.MutedText;
+            arrowImg.raycastTarget = false;
+        }
+
+        var dropdown = ddGo.AddComponent<SimpleDropdown>();
+        dropdown.Options = options;
+        dropdown.Value = Mathf.Clamp(defaultIndex, 0, Mathf.Max(options.Count - 1, 0));
+        dropdown.OnCaptionChanged = captionLabel.SetText;
+
+        return dropdown;
+    }
+
+    private static TMP_InputField CreateNumberInput(RectTransform parent, float defaultValue, string format, float width)
+    {
+        var go = new GameObject("NumberInput", typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var layoutEl = go.AddComponent<LayoutElement>();
+        layoutEl.preferredWidth = width;
+        layoutEl.preferredHeight = 20f;
+
+        var bgImg = go.AddComponent<Image>();
+        bgImg.sprite = UITheme.RoundedRect(40, 20, 6);
+        bgImg.type = Image.Type.Sliced;
+        bgImg.color = UITheme.Surface2;
+
+        if (!TmpAvailable())
+        {
+            Plugin.Logger.LogWarning("[UI] Number input requires TMP; skipping (no TMP font asset was found).");
+            return null;
+        }
+
+        var textAreaRect = CreateFullRect(go.transform, "Text Area");
+        textAreaRect.offsetMin = new Vector2(6f, 2f);
+        textAreaRect.offsetMax = new Vector2(-6f, -2f);
+        textAreaRect.gameObject.AddComponent<RectMask2D>();
+
+        var textLabel = CreateLabel(textAreaRect, defaultValue.ToString(format), 12, UITheme.Text);
+        Stretch(textLabel.Graphic.rectTransform);
+
+        var inputField = go.AddComponent<TMP_InputField>();
+        inputField.targetGraphic = bgImg;
+        inputField.textViewport = textAreaRect;
+        inputField.textComponent = (TMP_Text)textLabel.Graphic;
+        inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+        inputField.text = defaultValue.ToString(format);
+
+        return inputField;
+    }
+
+    private static void AddExecuteButton(RectTransform row, Action onClick)
+    {
+        var go = new GameObject("Execute", typeof(RectTransform));
+        go.transform.SetParent(row, false);
+        var layoutEl = go.AddComponent<LayoutElement>();
+        layoutEl.preferredWidth = 56f;
+        layoutEl.preferredHeight = 20f;
+
+        var img = go.AddComponent<Image>();
+        img.sprite = UITheme.RoundedRect(40, 20, 6);
+        img.type = Image.Type.Sliced;
+        img.color = UITheme.Accent;
+
+        var button = go.AddComponent<Button>();
+        button.transition = Selectable.Transition.None;
+        button.targetGraphic = img;
+        button.onClick.AddListener(() => onClick?.Invoke());
+
+        var hover = go.AddComponent<HoverEffect>();
+        hover.TargetImage = img;
+        hover.IdleColor = UITheme.Accent;
+        hover.HoverColor = UITheme.AccentHover;
+        hover.SelectedColor = UITheme.AccentHover;
+
+        var label = CreateLabel(go.transform, "Execute", 11, UITheme.Base);
+        Stretch(label.Graphic.rectTransform);
+        switch (label.Graphic)
+        {
+            case TextMeshProUGUI tmp:
+                tmp.alignment = TextAlignmentOptions.Center;
+                break;
+            case Text legacy:
+                legacy.alignment = TextAnchor.MiddleCenter;
+                break;
+        }
+    }
+
+    // Pick an option, click Execute.
+    public static void CreateDropdownActionRow(RectTransform parent, string label, List<string> options, Action<int> onExecute)
+    {
+        var row = CreateRow(parent);
+        CreateRowLabel(row, label);
+
+        var dropdown = CreateDropdown(row, options, 0, 130f);
+
+        AddExecuteButton(row, () => onExecute?.Invoke(dropdown.Value));
+    }
+
+    // Pick an option, type an amount, click Execute.
+    public static void CreateDropdownAmountActionRow(RectTransform parent, string label, List<string> options, float defaultAmount, string format, Action<int, float> onExecute)
+    {
+        var row = CreateRow(parent);
+        CreateRowLabel(row, label);
+
+        var dropdown = CreateDropdown(row, options, 0, 90f);
+        var numberInput = CreateNumberInput(row, defaultAmount, format, 50f);
+        if (numberInput == null)
+            return;
+
+        AddExecuteButton(row, () =>
+        {
+            float.TryParse(numberInput.text, out var amount);
+            onExecute?.Invoke(dropdown.Value, amount);
+        });
+    }
+
+    // Type a number, click Execute.
+    public static void CreateNumberActionRow(RectTransform parent, string label, float defaultValue, string format, Action<float> onExecute)
+    {
+        var row = CreateRow(parent);
+        CreateRowLabel(row, label);
+
+        var numberInput = CreateNumberInput(row, defaultValue, format, 70f);
+        if (numberInput == null)
+            return;
+
+        AddExecuteButton(row, () =>
+        {
+            float.TryParse(numberInput.text, out var value);
+            onExecute?.Invoke(value);
         });
     }
 }
