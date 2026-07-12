@@ -1,4 +1,6 @@
+using System.Collections;
 using BepInEx.Configuration;
+using tr_mod_menu.Cheats;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -45,8 +47,34 @@ internal class MenuController : MonoBehaviour
 
         EnsureEventSystem();
 
+        StartCoroutine(BuildAfterCompatibilityCheck(canvasRoot, uiScale));
+    }
+
+    // CompatibilityGate needs VersionNumberManager.instance, which is only set once the game's
+    // own VersionNumberManager component runs its Awake() -- not guaranteed to exist yet when
+    // our plugin's own Awake() runs, so we build the actual menu one frame at a time until
+    // either it shows up or we give up and treat the version as unknown (fail safe: cheats stay
+    // disabled rather than defaulting to enabled).
+    private IEnumerator BuildAfterCompatibilityCheck(RectTransform canvasRoot, ConfigEntry<float> uiScale)
+    {
+        const float timeoutSeconds = 30f;
+        var elapsed = 0f;
+        while (VersionNumberManager.instance == null && elapsed < timeoutSeconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        CompatibilityGate.Check();
+
         _window = MenuWindow.Create(canvasRoot, _toggleKey, uiScale);
         _window.Close(instant: true);
+
+        // Shown immediately (not gated behind opening the menu) so the player sees it even if
+        // they never touch Insert -- the whole point is to warn before they go looking for
+        // cheats that are quietly disabled.
+        if (!CompatibilityGate.CheatsEnabled)
+            CompatibilityBanner.Show(canvasRoot);
     }
 
     // BepInEx Script Engine hot-reloads this assembly without unloading whatever a previous
@@ -86,7 +114,7 @@ internal class MenuController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(_toggleKey.Value))
+        if (_window != null && Input.GetKeyDown(_toggleKey.Value))
             Toggle();
     }
 

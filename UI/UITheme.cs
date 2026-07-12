@@ -7,6 +7,7 @@ internal static class UITheme
 {
     // Catppuccin Mocha backgrounds/accent, with text pushed to true white/silver per feedback
     public static readonly Color Base = Hex("#1E1E2E");
+    public static readonly Color Mantle = Hex("#181825"); // darker than Surface -- row/card backgrounds
     public static readonly Color Surface = Hex("#24273A");
     public static readonly Color Border = Hex("#313244");
     public static readonly Color Surface2 = Hex("#585B70");

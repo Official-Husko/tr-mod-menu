@@ -10,13 +10,13 @@ internal enum RowKind
     Slider,
     Dropdown,
     DropdownAmount,
-    NumberInput,
-    Note
+    NumberInput
 }
 
 internal class RowSpec
 {
     public string Label;
+    public string IconName;
     public RowKind Kind;
     public bool DefaultBool;
     public float DefaultFloat;
@@ -25,60 +25,67 @@ internal class RowSpec
     public string Format = "0.0";
     public List<string> Options;
 
+    // Small grey caption shown inside the same card, below a thin separator -- e.g.
+    // clarifying how to read a NumberInput's units. Null means no note area at all.
+    public string Note;
+
     // Most rows are still inert placeholders logged by MenuWindow.BuildDataRow. A row that's
     // been wired to a real game system (see Cheats/) sets this to override that placeholder.
     public Action<float> OnExecute;
 
-    public static RowSpec Toggle(string label, bool defaultValue = false) => new()
+    public static RowSpec Toggle(string label, string iconName, bool defaultValue = false, string note = null) => new()
     {
         Label = label,
+        IconName = iconName,
         Kind = RowKind.Toggle,
-        DefaultBool = defaultValue
+        DefaultBool = defaultValue,
+        Note = note
     };
 
-    public static RowSpec Slider(string label, float min, float max, float defaultValue, string format = "0.0") => new()
+    public static RowSpec Slider(string label, string iconName, float min, float max, float defaultValue, string format = "0.0", string note = null) => new()
     {
         Label = label,
+        IconName = iconName,
         Kind = RowKind.Slider,
         Min = min,
         Max = max,
         DefaultFloat = defaultValue,
-        Format = format
+        Format = format,
+        Note = note
     };
 
     // Pick an option from a dropdown, then click Execute to apply it.
-    public static RowSpec Dropdown(string label, List<string> options) => new()
+    public static RowSpec Dropdown(string label, string iconName, List<string> options, string note = null) => new()
     {
         Label = label,
+        IconName = iconName,
         Kind = RowKind.Dropdown,
-        Options = options
+        Options = options,
+        Note = note
     };
 
     // Pick an option AND type an amount, then click Execute.
-    public static RowSpec DropdownAmount(string label, List<string> options, float defaultAmount, string format = "0") => new()
+    public static RowSpec DropdownAmount(string label, string iconName, List<string> options, float defaultAmount, string format = "0", string note = null) => new()
     {
         Label = label,
+        IconName = iconName,
         Kind = RowKind.DropdownAmount,
         Options = options,
         DefaultFloat = defaultAmount,
-        Format = format
+        Format = format,
+        Note = note
     };
 
     // Type a number, then click Execute.
-    public static RowSpec NumberInput(string label, float defaultValue, string format = "0", Action<float> onExecute = null) => new()
+    public static RowSpec NumberInput(string label, string iconName, float defaultValue, string format = "0", Action<float> onExecute = null, string note = null) => new()
     {
         Label = label,
+        IconName = iconName,
         Kind = RowKind.NumberInput,
         DefaultFloat = defaultValue,
         Format = format,
-        OnExecute = onExecute
-    };
-
-    // Small grey explanatory caption, no controls -- e.g. clarifying how to read a NumberInput's units.
-    public static RowSpec Note(string text) => new()
-    {
-        Label = text,
-        Kind = RowKind.Note
+        OnExecute = onExecute,
+        Note = note
     };
 }
 
@@ -105,12 +112,12 @@ internal static class MenuCategories
             IconName = "player",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("God Mode"),
-                RowSpec.Toggle("Infinite Stamina"),
-                RowSpec.Slider("Move Speed", 1f, 5f, 1f, "0.0\"x\""),
-                RowSpec.Toggle("Infinite Money"),
-                RowSpec.NumberInput("Add Money", 10000f, "0", PlayerCheats.AddMoney),
-                RowSpec.Note("e.g. 10250 = 1 gold, 2 silver, 50 copper. Negative values subtract.")
+                RowSpec.Toggle("God Mode", "shieldhalved"),
+                RowSpec.Toggle("Infinite Stamina", "bolt"),
+                RowSpec.Slider("Move Speed", "gaugehigh", 1f, 5f, 1f, "0.0\"x\""),
+                RowSpec.Toggle("Infinite Money", "sackdollar"),
+                RowSpec.NumberInput("Add Money", "handholdingdollar", 10000f, "0", PlayerCheats.AddMoney,
+                    "e.g. 10250 = 1 gold, 2 silver, 50 copper. Negative values subtract.")
             }
         },
         new CategorySpec
@@ -119,10 +126,10 @@ internal static class MenuCategories
             IconName = "online",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Sync Cheats To All Players"),
-                RowSpec.Toggle("Hide Cheats From Other Players"),
-                RowSpec.Toggle("Give All Players Infinite Money"),
-                RowSpec.Toggle("Host-Only Cheat Restrictions")
+                RowSpec.Toggle("Sync Cheats To All Players", "arrowsrotate"),
+                RowSpec.Toggle("Hide Cheats From Other Players", "eyeslash"),
+                RowSpec.Toggle("Give All Players Infinite Money", "sackdollar"),
+                RowSpec.Toggle("Host-Only Cheat Restrictions", "lock")
             }
         },
         new CategorySpec
@@ -131,10 +138,10 @@ internal static class MenuCategories
             IconName = "farming",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Instant Crop Growth"),
-                RowSpec.Toggle("Water Crops Automatically"),
-                RowSpec.Slider("Crop Growth Speed", 1f, 10f, 1f, "0.0\"x\""),
-                RowSpec.DropdownAmount("Give Item", new List<string> { "Food", "Seed", "Fish", "Drink" }, 1f)
+                RowSpec.Toggle("Instant Crop Growth", "seedling"),
+                RowSpec.Toggle("Water Crops Automatically", "droplet"),
+                RowSpec.Slider("Crop Growth Speed", "gaugehigh", 1f, 10f, 1f, "0.0\"x\""),
+                RowSpec.DropdownAmount("Give Item", "gift", new List<string> { "Food", "Seed", "Fish", "Drink" }, 1f)
             }
         },
         new CategorySpec
@@ -143,10 +150,10 @@ internal static class MenuCategories
             IconName = "tavern",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Instant Barrel Aging"),
-                RowSpec.Toggle("Max Tavern Reputation"),
-                RowSpec.Slider("Service Speed", 1f, 5f, 1f, "0.0\"x\""),
-                RowSpec.Slider("Tavern XP Multiplier", 1f, 10f, 1f, "0.0\"x\"")
+                RowSpec.Toggle("Instant Barrel Aging", "hourglasshalf"),
+                RowSpec.Toggle("Max Tavern Reputation", "star"),
+                RowSpec.Slider("Service Speed", "gaugehigh", 1f, 5f, 1f, "0.0\"x\""),
+                RowSpec.Slider("Tavern XP Multiplier", "arrowtrendup", 1f, 10f, 1f, "0.0\"x\"")
             }
         },
         new CategorySpec
@@ -155,10 +162,10 @@ internal static class MenuCategories
             IconName = "world",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Freeze Time of Day"),
-                RowSpec.Slider("Time Scale", 0f, 5f, 1f, "0.0\"x\""),
-                RowSpec.Toggle("Disable Weather"),
-                RowSpec.Dropdown("Set Weather", new List<string> { "Sunny", "Rain", "Snow", "Cloudy", "Wind" })
+                RowSpec.Toggle("Freeze Time of Day", "snowflake"),
+                RowSpec.Slider("Time Scale", "clockrotateleft", 0f, 5f, 1f, "0.0\"x\""),
+                RowSpec.Toggle("Disable Weather", "ban"),
+                RowSpec.Dropdown("Set Weather", "cloud", new List<string> { "Sunny", "Rain", "Snow", "Cloudy", "Wind" })
             }
         },
         new CategorySpec
@@ -167,8 +174,8 @@ internal static class MenuCategories
             IconName = "misc",
             Rows = new List<RowSpec>
             {
-                RowSpec.Toggle("Noclip"),
-                RowSpec.Toggle("Unlock All Recipes")
+                RowSpec.Toggle("Noclip", "ghost"),
+                RowSpec.Toggle("Unlock All Recipes", "bookopen")
             }
         }
     };

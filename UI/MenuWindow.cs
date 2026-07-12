@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using tr_mod_menu.Cheats;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -196,6 +197,14 @@ internal class MenuWindow : MonoBehaviour
         var rowList = UIFactory.CreateRowList(panelRect);
         build(rowList);
 
+        // Each card sizes itself via ContentSizeFitter (see UIFactory.CreateRow), which only
+        // resolves on a layout rebuild pass. All 6 non-default panels get SetActive(false)
+        // shortly after this returns (see BuildCategories), and Unity's automatic end-of-frame
+        // rebuild skips inactive hierarchies -- so without forcing it here, while the panel is
+        // still guaranteed active, those cards would stack using stale/default sizes the first
+        // time their tab is opened (big gaps, content spilling past the window edge).
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rowList);
+
         _categoryPanels.Add(panelRect.gameObject);
     }
 
@@ -204,27 +213,30 @@ internal class MenuWindow : MonoBehaviour
         switch (row.Kind)
         {
             case RowKind.Toggle:
-                UIFactory.CreateToggleRow(rowList, row.Label, row.DefaultBool,
-                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"));
+                UIFactory.CreateToggleRow(rowList, row.Label, row.IconName, row.DefaultBool,
+                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"), row.Note);
                 break;
             case RowKind.Slider:
-                UIFactory.CreateSliderRow(rowList, row.Label, row.Min, row.Max, row.DefaultFloat, row.Format,
-                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"));
+                UIFactory.CreateSliderRow(rowList, row.Label, row.IconName, row.Min, row.Max, row.DefaultFloat, row.Format,
+                    v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"), row.Note);
                 break;
             case RowKind.Dropdown:
-                UIFactory.CreateDropdownActionRow(rowList, row.Label, row.Options,
-                    i => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}'"));
+                UIFactory.CreateDropdownActionRow(rowList, row.Label, row.IconName, row.Options,
+                    i => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}'"), row.Note);
                 break;
             case RowKind.DropdownAmount:
-                UIFactory.CreateDropdownAmountActionRow(rowList, row.Label, row.Options, row.DefaultFloat, row.Format,
-                    (i, amount) => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}' x{amount.ToString(row.Format)}"));
+                UIFactory.CreateDropdownAmountActionRow(rowList, row.Label, row.IconName, row.Options, row.DefaultFloat, row.Format,
+                    (i, amount) => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with '{row.Options[i]}' x{amount.ToString(row.Format)}"), row.Note);
                 break;
             case RowKind.NumberInput:
-                UIFactory.CreateNumberActionRow(rowList, row.Label, row.DefaultFloat, row.Format,
-                    row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with {v.ToString(row.Format)}")));
-                break;
-            case RowKind.Note:
-                UIFactory.CreateNoteRow(rowList, row.Label);
+                // A real cheat (row.OnExecute set) touches obfuscated game code and gets
+                // disabled by CompatibilityGate on a version mismatch; placeholders (still just
+                // logging) are harmless and stay usable regardless of game version.
+                var isRealCheat = row.OnExecute != null;
+                var blocked = isRealCheat && !CompatibilityGate.CheatsEnabled;
+                UIFactory.CreateNumberActionRow(rowList, row.Label, row.IconName, row.DefaultFloat, row.Format,
+                    row.OnExecute ?? (v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed with {v.ToString(row.Format)}")),
+                    blocked, row.Note);
                 break;
         }
     }
@@ -232,7 +244,7 @@ internal class MenuWindow : MonoBehaviour
     private void BuildSettingsPanel(RectTransform rowList, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)
     {
         UIFactory.CreateInfoRow(rowList, "Menu Toggle Key", toggleKey.Value.ToString());
-        UIFactory.CreateSliderRow(rowList, "UI Scale", 0.75f, 1.5f, uiScale.Value, "0.00\"x\"",
+        UIFactory.CreateSliderRow(rowList, "UI Scale", "settings", 0.75f, 1.5f, uiScale.Value, "0.00\"x\"",
             v => SetUiScale(v, uiScale));
     }
 

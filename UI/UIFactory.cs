@@ -95,7 +95,7 @@ internal static class UIFactory
         return img;
     }
 
-    public static UILabel CreateLabel(Transform parent, string text, int fontSize, Color color)
+    public static UILabel CreateLabel(Transform parent, string text, int fontSize, Color color, bool wrap = false)
     {
         var go = new GameObject("Label", typeof(RectTransform));
         go.transform.SetParent(parent, false);
@@ -112,8 +112,8 @@ internal static class UIFactory
             tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.color = color;
-            tmp.alignment = TextAlignmentOptions.MidlineLeft;
-            tmp.enableWordWrapping = false;
+            tmp.alignment = wrap ? TextAlignmentOptions.TopLeft : TextAlignmentOptions.MidlineLeft;
+            tmp.enableWordWrapping = wrap;
             tmp.overflowMode = TextOverflowModes.Overflow;
             tmp.raycastTarget = false;
             return new UILabel(tmp, s => tmp.text = s);
@@ -124,8 +124,8 @@ internal static class UIFactory
         legacyText.text = text;
         legacyText.fontSize = fontSize;
         legacyText.color = color;
-        legacyText.alignment = TextAnchor.MiddleLeft;
-        legacyText.horizontalOverflow = HorizontalWrapMode.Overflow;
+        legacyText.alignment = wrap ? TextAnchor.UpperLeft : TextAnchor.MiddleLeft;
+        legacyText.horizontalOverflow = wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
         legacyText.verticalOverflow = VerticalWrapMode.Overflow;
         legacyText.raycastTarget = false;
         return new UILabel(legacyText, s => legacyText.text = s);
@@ -196,50 +196,97 @@ internal static class UIFactory
         var rect = CreateFullRect(parent, "RowList");
         var vlg = rect.gameObject.AddComponent<VerticalLayoutGroup>();
         vlg.padding = new RectOffset(0, 0, 6, 6);
-        vlg.spacing = 2;
+        vlg.spacing = 4;
         vlg.childAlignment = TextAnchor.UpperLeft;
-        vlg.childControlHeight = true;
+        vlg.childControlHeight = false; // cards size themselves via ContentSizeFitter; see CreateRow
         vlg.childControlWidth = true;
         vlg.childForceExpandHeight = false;
         vlg.childForceExpandWidth = true;
         return rect;
     }
 
-    private static RectTransform CreateRow(RectTransform parent)
+    // Wraps every row in its own rounded, darker-than-the-panel "card" -- gives each cheat a
+    // capsuled feel instead of sitting as a bare line directly on the panel background. When
+    // `note` is set, a thin separator + a small caption are appended inside the *same* card,
+    // below the row, rather than becoming a separate row of their own.
+    private static RectTransform CreateRow(RectTransform parent, string iconName = null, string note = null)
     {
-        var go = new GameObject("Row", typeof(RectTransform));
-        go.transform.SetParent(parent, false);
+        var cardGo = new GameObject("Card", typeof(RectTransform));
+        cardGo.transform.SetParent(parent, false);
 
-        var layoutEl = go.AddComponent<LayoutElement>();
-        layoutEl.preferredHeight = UITheme.RowHeight;
-        layoutEl.minHeight = UITheme.RowHeight;
+        var cardImg = cardGo.AddComponent<Image>();
+        cardImg.sprite = UITheme.RoundedRect(40, 40, 8);
+        cardImg.type = Image.Type.Sliced;
+        cardImg.color = UITheme.Mantle;
 
-        var hlg = go.AddComponent<HorizontalLayoutGroup>();
-        hlg.padding = new RectOffset(14, 14, 0, 0);
-        hlg.spacing = 10;
+        var cardVlg = cardGo.AddComponent<VerticalLayoutGroup>();
+        cardVlg.padding = new RectOffset(0, 0, 4, 4);
+        cardVlg.spacing = 2;
+        cardVlg.childAlignment = TextAnchor.UpperLeft;
+        cardVlg.childControlWidth = true;
+        // False, same as everywhere else in this file: with this true, a card whose row is
+        // itself a HorizontalLayoutGroup would fold *its own* childForceExpand flag into the
+        // flexible-size the card reports to RowList, stretching every card to fill the panel.
+        cardVlg.childControlHeight = false;
+        cardVlg.childForceExpandWidth = true;
+        cardVlg.childForceExpandHeight = false;
+
+        // The card has no fixed height of its own -- it must grow to fit its row (+ optional
+        // note) -- so ITS OWN preferred height needs to come from a ContentSizeFitter, not a
+        // LayoutElement (RowList reads the card's actual current rect height for stacking,
+        // since RowList's own childControlHeight is also false -- see CreateRowList above).
+        var fitter = cardGo.AddComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        var rowGo = new GameObject("Row", typeof(RectTransform));
+        rowGo.transform.SetParent(cardGo.transform, false);
+        ((RectTransform)rowGo.transform).sizeDelta = new Vector2(0f, UITheme.RowHeight);
+
+        var hlg = rowGo.AddComponent<HorizontalLayoutGroup>();
+        hlg.padding = new RectOffset(10, 10, 0, 0);
+        hlg.spacing = 8;
         hlg.childAlignment = TextAnchor.MiddleLeft;
         hlg.childControlWidth = true;
         hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
-        // Must stay false: HorizontalLayoutGroup folds its own childForceExpand flag into the
-        // flexible-size it reports to ITS parent (RowList), so leaving this true made every row
-        // report flexibleHeight=1 upward and get stretched to fill the whole panel evenly.
         hlg.childForceExpandHeight = false;
 
-        return (RectTransform)go.transform;
+        var icon = iconName != null ? Icons.Load(iconName) : null;
+        if (icon != null)
+        {
+            var iconGo = new GameObject("Icon", typeof(RectTransform));
+            iconGo.transform.SetParent(rowGo.transform, false);
+            var iconLayoutEl = iconGo.AddComponent<LayoutElement>();
+            iconLayoutEl.preferredWidth = 14f;
+            iconLayoutEl.preferredHeight = 14f;
+            var iconImg = iconGo.AddComponent<Image>();
+            iconImg.sprite = icon;
+            iconImg.color = UITheme.MutedText;
+            iconImg.raycastTarget = false;
+        }
+
+        if (note != null)
+        {
+            var sep = CreatePanel(cardGo.transform, "Separator", UITheme.Border, 4, 0);
+            sep.rectTransform.sizeDelta = new Vector2(0f, 1f);
+
+            var noteGo = new GameObject("Note", typeof(RectTransform));
+            noteGo.transform.SetParent(cardGo.transform, false);
+            ((RectTransform)noteGo.transform).sizeDelta = new Vector2(0f, 24f);
+
+            var noteLabel = CreateLabel(noteGo.transform, note, 10, UITheme.MutedText, wrap: true);
+            var noteLabelRect = noteLabel.Graphic.rectTransform;
+            Stretch(noteLabelRect);
+            noteLabelRect.offsetMin = new Vector2(10f, 2f);
+            noteLabelRect.offsetMax = new Vector2(-10f, -2f);
+        }
+
+        return (RectTransform)rowGo.transform;
     }
 
     private static void CreateRowLabel(RectTransform row, string text)
     {
         var label = CreateLabel(row, text, 13, UITheme.Text);
-        var layoutEl = label.Graphic.gameObject.AddComponent<LayoutElement>();
-        layoutEl.flexibleWidth = 1;
-    }
-
-    public static void CreateNoteRow(RectTransform parent, string text)
-    {
-        var row = CreateRow(parent);
-        var label = CreateLabel(row, text, 10, UITheme.MutedText);
         var layoutEl = label.Graphic.gameObject.AddComponent<LayoutElement>();
         layoutEl.flexibleWidth = 1;
     }
@@ -284,7 +331,7 @@ internal static class UIFactory
         linkLabel.SetAlignRight();
     }
 
-    public static void CreateToggleRow(RectTransform parent, string label, bool defaultValue, Action<bool> onChanged)
+    public static void CreateToggleRow(RectTransform parent, string label, string iconName, bool defaultValue, Action<bool> onChanged, string note = null)
     {
         const float pillWidth = 36f;
         const float pillHeight = 18f;
@@ -293,7 +340,7 @@ internal static class UIFactory
         var offX = margin + knobSize / 2f;
         var onX = pillWidth - margin - knobSize / 2f;
 
-        var row = CreateRow(parent);
+        var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
 
         var pillGo = new GameObject("Toggle", typeof(RectTransform));
@@ -328,9 +375,9 @@ internal static class UIFactory
         toggle.OnValueChanged += v => onChanged?.Invoke(v);
     }
 
-    public static void CreateSliderRow(RectTransform parent, string label, float min, float max, float defaultValue, string format, Action<float> onChanged)
+    public static void CreateSliderRow(RectTransform parent, string label, string iconName, float min, float max, float defaultValue, string format, Action<float> onChanged, string note = null)
     {
-        var row = CreateRow(parent);
+        var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
 
         var containerGo = new GameObject("SliderContainer", typeof(RectTransform));
@@ -488,7 +535,7 @@ internal static class UIFactory
         return inputField;
     }
 
-    private static void AddExecuteButton(RectTransform row, Action onClick)
+    private static void AddExecuteButton(RectTransform row, Action onClick, bool disabled = false)
     {
         var go = new GameObject("Execute", typeof(RectTransform));
         go.transform.SetParent(row, false);
@@ -496,23 +543,26 @@ internal static class UIFactory
         layoutEl.preferredWidth = 56f;
         layoutEl.preferredHeight = 20f;
 
+        var idleColor = disabled ? UITheme.Surface2 : UITheme.Accent;
+
         var img = go.AddComponent<Image>();
         img.sprite = UITheme.RoundedRect(40, 20, 6);
         img.type = Image.Type.Sliced;
-        img.color = UITheme.Accent;
+        img.color = idleColor;
 
         var button = go.AddComponent<Button>();
         button.transition = Selectable.Transition.None;
         button.targetGraphic = img;
+        button.interactable = !disabled;
         button.onClick.AddListener(() => onClick?.Invoke());
 
         var hover = go.AddComponent<HoverEffect>();
         hover.TargetImage = img;
-        hover.IdleColor = UITheme.Accent;
-        hover.HoverColor = UITheme.AccentHover;
-        hover.SelectedColor = UITheme.AccentHover;
+        hover.IdleColor = idleColor;
+        hover.HoverColor = disabled ? idleColor : UITheme.AccentHover;
+        hover.SelectedColor = hover.HoverColor;
 
-        var label = CreateLabel(go.transform, "Execute", 11, UITheme.Base);
+        var label = CreateLabel(go.transform, "Execute", 11, disabled ? UITheme.MutedText : UITheme.Base);
         Stretch(label.Graphic.rectTransform);
         switch (label.Graphic)
         {
@@ -526,9 +576,9 @@ internal static class UIFactory
     }
 
     // Pick an option, click Execute.
-    public static void CreateDropdownActionRow(RectTransform parent, string label, List<string> options, Action<int> onExecute)
+    public static void CreateDropdownActionRow(RectTransform parent, string label, string iconName, List<string> options, Action<int> onExecute, string note = null)
     {
-        var row = CreateRow(parent);
+        var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
 
         var dropdown = CreateDropdown(row, options, 0, 130f);
@@ -537,9 +587,9 @@ internal static class UIFactory
     }
 
     // Pick an option, type an amount, click Execute.
-    public static void CreateDropdownAmountActionRow(RectTransform parent, string label, List<string> options, float defaultAmount, string format, Action<int, float> onExecute)
+    public static void CreateDropdownAmountActionRow(RectTransform parent, string label, string iconName, List<string> options, float defaultAmount, string format, Action<int, float> onExecute, string note = null)
     {
-        var row = CreateRow(parent);
+        var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
 
         var dropdown = CreateDropdown(row, options, 0, 90f);
@@ -554,20 +604,24 @@ internal static class UIFactory
         });
     }
 
-    // Type a number, click Execute.
-    public static void CreateNumberActionRow(RectTransform parent, string label, float defaultValue, string format, Action<float> onExecute)
+    // Type a number, click Execute. `disabled` grays out the field and button without
+    // hiding the row -- used to show a real cheat exists but is currently blocked
+    // (e.g. by CompatibilityGate) rather than making it look like a no-op placeholder.
+    public static void CreateNumberActionRow(RectTransform parent, string label, string iconName, float defaultValue, string format, Action<float> onExecute, bool disabled = false, string note = null)
     {
-        var row = CreateRow(parent);
+        var row = CreateRow(parent, iconName, note);
         CreateRowLabel(row, label);
 
         var numberInput = CreateNumberInput(row, defaultValue, format, 70f);
         if (numberInput == null)
             return;
 
+        numberInput.interactable = !disabled;
+
         AddExecuteButton(row, () =>
         {
             float.TryParse(numberInput.text, out var value);
             onExecute?.Invoke(value);
-        });
+        }, disabled);
     }
 }

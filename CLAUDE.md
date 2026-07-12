@@ -15,7 +15,9 @@ uGUI mod menu (dark theme, sidebar navigation) plus real cheat hooks into the ga
 - `Cheats/` — real hooks into the game, one static class per category (e.g. `PlayerCheats.cs`).
   A `RowSpec` in `MenuCategories.cs` wires a UI row to one of these via its `onExecute`
   parameter (stored as `RowSpec.OnExecute`). Until wired, a row just logs
-  `[Placeholder] ...` when used — that's expected, not a bug.
+  `[Placeholder] ...` when used — that's expected, not a bug. `CompatibilityGate.cs` checks
+  `Application.version` against `KnownCompatibleVersion` once at startup and disables every
+  wired (non-placeholder) row if it doesn't match — see "Adding a new cheat" below.
 - `Icons/` — small PNGs rasterized ahead of time from the Font Awesome Pro kit in `assets/`
   (embedded as resources — see "Adding an icon" below).
 - `game_source/` — ILSpy-decompiled dump of every assembly the game loads (Assembly-CSharp,
@@ -58,8 +60,22 @@ extra `PackageReference` needed to use `[HarmonyPatch]`/`HarmonyLib`.
 1. Find the real hook in `game_source/` (see modding notes below for how to deal with the
    randomized names).
 2. Add a static method to the matching file in `Cheats/` (or start a new one).
-3. Wire a `RowSpec` in `MenuCategories.cs` to it via the `onExecute` parameter.
-4. If the UI needs a new control type, add it in `UI/UIFactory.cs`.
+3. Wire a `RowSpec` in `MenuCategories.cs` to it via the `onExecute` parameter. Every row
+   factory (`Toggle`/`Slider`/`Dropdown`/`DropdownAmount`/`NumberInput`) takes an `iconName`
+   (Font Awesome name, see "Adding an icon") and an optional trailing `note` string — a note
+   renders as a small caption *inside the same card*, below a separator line, rather than as
+   its own row.
+4. If the UI needs a new control type, add it in `UI/UIFactory.cs`. Every row is wrapped in a
+   rounded, `UITheme.Mantle`-colored card (`UIFactory.CreateRow`, private) that auto-sizes via
+   `ContentSizeFitter` — go through `CreateRow`/`CreateRowLabel` rather than building a bare row
+   directly on the list, so new row types get the same card/icon/note treatment for free.
+5. If the method touches any obfuscated (randomly-named) member, it's automatically covered by
+   `CompatibilityGate` as long as it's wired through `RowSpec.OnExecute` like the rest — no
+   extra step needed. If `Application.version` doesn't match
+   `CompatibilityGate.KnownCompatibleVersion`, the row's control renders disabled instead of
+   running, and `CompatibilityBanner` warns the player at startup regardless of whether they
+   open the menu. Bump `KnownCompatibleVersion` (and re-verify every obfuscated member every
+   cheat relies on) after confirming a mod update against a new game version.
 
 ---
 
@@ -177,7 +193,7 @@ string name = LocalisationSystem.Get("Items/item_name_" + x.id);
 string desc = LocalisationSystem.Get("Items/item_description_" + x.id);
 ```
 
-### Worked example already in this repo
+### Worked examples already in this repo
 
 `Cheats/PlayerCheats.cs` follows the "prefer clean public members" rule above:
 `Money.GetBalance()` and `Money.KLKDEMKNHNN()` (an obfuscated-but-public "is loaded" check) are
@@ -186,3 +202,15 @@ only cleanly-named members on that class — everything else on it is obfuscated
 those, and reconstruct the total-value math ourselves (`copper + silver*100 + gold*10000`,
 matching the game's own encoding) rather than calling one of `MoneyCalc`'s obfuscated helper
 methods that happens to do something similar.
+
+`Cheats/CompatibilityGate.cs` finds the game's *displayed* version by tracing a visible piece of
+UI back to its data source, rather than guessing: the pause menu shows a version string at the
+bottom of its centered box, so grep `game_source/` for the UI class that draws it
+(`PauseMenuUI.cs`) and read what it binds — `versionNumberText.text = VersionNumberManager.instance.version;`.
+`VersionNumberManager.instance`/`.version` are both clean public names (everything else on that
+class is obfuscated). This is more reliable than `UnityEngine.Application.version`, which this
+game doesn't appear to actually use for its own displayed version. It also demonstrates a timing
+issue worth remembering: `VersionNumberManager.instance` is set in *its own* `Awake()`, which
+isn't guaranteed to have run yet when a BepInEx plugin's `Awake()` fires — `MenuController` polls
+for it in a coroutine (with a timeout, failing safe to "cheats disabled") before building
+anything that depends on `CompatibilityGate.CheatsEnabled`.
