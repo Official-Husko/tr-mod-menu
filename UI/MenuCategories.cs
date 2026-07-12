@@ -46,8 +46,9 @@ internal class CategorySpec
 // Placeholder feature set for the UI shell -- no real game hooks yet.
 // Labels are grounded in real Travellers Rest systems from game_source
 // (AgingBarrel, TavernReputation, TavernServiceManager, TavernXP, Crop,
-// CropSeason, PlayerController, MoneyCalc, Weather) so the layout reads as
-// real content rather than lorem-ipsum placeholders.
+// CropSeason, PlayerController, MoneyCalc, Weather, and the game's own
+// Online*/co-op systems such as OnlineTavernManager) so the layout reads
+// as real content rather than lorem-ipsum placeholders.
 internal static class MenuCategories
 {
     public static readonly List<CategorySpec> All = new()
@@ -106,6 +107,18 @@ internal static class MenuCategories
             {
                 RowSpec.Toggle("Noclip"),
                 RowSpec.Toggle("Unlock All Recipes")
+            }
+        },
+        new CategorySpec
+        {
+            Name = "Online",
+            IconName = "online",
+            Rows = new List<RowSpec>
+            {
+                RowSpec.Toggle("Sync Cheats To All Players"),
+                RowSpec.Toggle("Hide Cheats From Other Players"),
+                RowSpec.Toggle("Give All Players Infinite Money"),
+                RowSpec.Toggle("Host-Only Cheat Restrictions")
             }
         }
     };

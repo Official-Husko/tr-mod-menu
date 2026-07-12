@@ -159,6 +159,12 @@ internal class MenuWindow : MonoBehaviour
             });
         }
 
+        // Flexible spacer absorbs all leftover sidebar height, pinning Settings/About to the
+        // bottom edge instead of just trailing immediately after the last cheat category.
+        var spacerGo = new GameObject("Spacer", typeof(RectTransform));
+        spacerGo.transform.SetParent(sidebarRect, false);
+        spacerGo.AddComponent<LayoutElement>().flexibleHeight = 1f;
+
         AddPanel(sidebarRect, contentRect, "Settings", "settings", rowList => BuildSettingsPanel(rowList, toggleKey));
         AddPanel(sidebarRect, contentRect, "About", "about", BuildAboutPanel);
 
