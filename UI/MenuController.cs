@@ -40,10 +40,12 @@ internal class MenuController : MonoBehaviour
     private void Init(ConfigFile config, RectTransform canvasRoot)
     {
         _toggleKey = config.Bind("General", "MenuToggleKey", KeyCode.Insert, "Key to show/hide the mod menu.");
+        var uiScale = config.Bind("General", "UIScale", 1f,
+            new ConfigDescription("Scale of the mod menu window.", new AcceptableValueRange<float>(0.75f, 1.5f)));
 
         EnsureEventSystem();
 
-        _window = MenuWindow.Create(canvasRoot, _toggleKey);
+        _window = MenuWindow.Create(canvasRoot, _toggleKey, uiScale);
         _window.Close(instant: true);
     }
 

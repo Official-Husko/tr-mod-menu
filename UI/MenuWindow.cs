@@ -13,11 +13,12 @@ internal class MenuWindow : MonoBehaviour
     private RectTransform _windowRect;
     private Image _backdrop;
     private Coroutine _animCoroutine;
+    private float _uiScale = 1f;
 
     private readonly List<SidebarTab> _tabs = new();
     private readonly List<GameObject> _categoryPanels = new();
 
-    public static MenuWindow Create(RectTransform canvasRoot, ConfigEntry<KeyCode> toggleKey)
+    public static MenuWindow Create(RectTransform canvasRoot, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)
     {
         var backdrop = UIFactory.CreatePanel(canvasRoot, "Backdrop",
             new Color(UITheme.Base.r, UITheme.Base.g, UITheme.Base.b, 0.55f), 4, 0);
@@ -28,13 +29,14 @@ internal class MenuWindow : MonoBehaviour
         windowGo.transform.SetParent(canvasRoot, false);
 
         var window = windowGo.AddComponent<MenuWindow>();
-        window.Init(backdrop, toggleKey);
+        window.Init(backdrop, toggleKey, uiScale);
         return window;
     }
 
-    private void Init(Image backdrop, ConfigEntry<KeyCode> toggleKey)
+    private void Init(Image backdrop, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)
     {
         _backdrop = backdrop;
+        _uiScale = uiScale.Value;
 
         _windowRect = (RectTransform)transform;
         _windowRect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -56,7 +58,17 @@ internal class MenuWindow : MonoBehaviour
 
         var sidebarRect = BuildSidebar();
         var contentRect = BuildContent();
-        BuildCategories(sidebarRect, contentRect, toggleKey);
+        BuildCategories(sidebarRect, contentRect, toggleKey, uiScale);
+    }
+
+    // Live-applies the scale (no lerp) so dragging the Settings slider previews instantly, and
+    // persists it to the config entry. Open/close animations multiply their target scale by
+    // this value (see AnimateTo/Close) so the window keeps opening at whatever scale was chosen.
+    private void SetUiScale(float scale, ConfigEntry<float> uiScaleConfig)
+    {
+        _uiScale = Mathf.Clamp(scale, 0.1f, 3f);
+        _windowRect.localScale = Vector3.one * _uiScale;
+        uiScaleConfig.Value = _uiScale;
     }
 
     private void BuildTitleBar()
@@ -148,7 +160,7 @@ internal class MenuWindow : MonoBehaviour
         return contentRect;
     }
 
-    private void BuildCategories(RectTransform sidebarRect, RectTransform contentRect, ConfigEntry<KeyCode> toggleKey)
+    private void BuildCategories(RectTransform sidebarRect, RectTransform contentRect, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)
     {
         foreach (var category in MenuCategories.All)
         {
@@ -165,7 +177,7 @@ internal class MenuWindow : MonoBehaviour
         spacerGo.transform.SetParent(sidebarRect, false);
         spacerGo.AddComponent<LayoutElement>().flexibleHeight = 1f;
 
-        AddPanel(sidebarRect, contentRect, "Settings", "settings", rowList => BuildSettingsPanel(rowList, toggleKey));
+        AddPanel(sidebarRect, contentRect, "Settings", "settings", rowList => BuildSettingsPanel(rowList, toggleKey, uiScale));
         AddPanel(sidebarRect, contentRect, "About", "about", BuildAboutPanel);
 
         if (_tabs.Count > 0)
@@ -201,11 +213,11 @@ internal class MenuWindow : MonoBehaviour
         }
     }
 
-    private static void BuildSettingsPanel(RectTransform rowList, ConfigEntry<KeyCode> toggleKey)
+    private void BuildSettingsPanel(RectTransform rowList, ConfigEntry<KeyCode> toggleKey, ConfigEntry<float> uiScale)
     {
         UIFactory.CreateInfoRow(rowList, "Menu Toggle Key", toggleKey.Value.ToString());
-        UIFactory.CreateSliderRow(rowList, "UI Scale", 0.75f, 1.5f, 1f, "0.00\"x\"",
-            v => Plugin.Logger.LogInfo($"[Placeholder] Settings.UIScale = {v:0.00}"));
+        UIFactory.CreateSliderRow(rowList, "UI Scale", 0.75f, 1.5f, uiScale.Value, "0.00\"x\"",
+            v => SetUiScale(v, uiScale));
     }
 
     private static void BuildAboutPanel(RectTransform rowList)
@@ -243,7 +255,7 @@ internal class MenuWindow : MonoBehaviour
             if (_animCoroutine != null)
                 StopCoroutine(_animCoroutine);
             _canvasGroup.alpha = 0f;
-            _windowRect.localScale = Vector3.one * UITheme.WindowClosedScale;
+            _windowRect.localScale = Vector3.one * UITheme.WindowClosedScale * _uiScale;
             _backdrop.gameObject.SetActive(false);
             return;
         }
@@ -255,7 +267,7 @@ internal class MenuWindow : MonoBehaviour
     {
         if (_animCoroutine != null)
             StopCoroutine(_animCoroutine);
-        _animCoroutine = StartCoroutine(AnimateRoutine(targetAlpha, targetScale));
+        _animCoroutine = StartCoroutine(AnimateRoutine(targetAlpha, targetScale * _uiScale));
     }
 
     private IEnumerator AnimateRoutine(float targetAlpha, float targetScale)

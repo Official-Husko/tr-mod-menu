@@ -5,7 +5,7 @@
   },
   "projects": {
     "/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/tr-mod-menu.csproj": {
-      "version": "1.0.8",
+      "version": "1.0.10",
       "restore": {
         "projectUniqueName": "/run/media/pawbeans/Project Drive/Projects/CSharp/game_mods/tr-mod-menu/tr-mod-menu.csproj",
         "projectName": "tr_mod_menu",

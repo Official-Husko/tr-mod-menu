@@ -67,6 +67,18 @@ internal static class MenuCategories
         },
         new CategorySpec
         {
+            Name = "Online",
+            IconName = "online",
+            Rows = new List<RowSpec>
+            {
+                RowSpec.Toggle("Sync Cheats To All Players"),
+                RowSpec.Toggle("Hide Cheats From Other Players"),
+                RowSpec.Toggle("Give All Players Infinite Money"),
+                RowSpec.Toggle("Host-Only Cheat Restrictions")
+            }
+        },
+        new CategorySpec
+        {
             Name = "Farming",
             IconName = "farming",
             Rows = new List<RowSpec>
@@ -107,18 +119,6 @@ internal static class MenuCategories
             {
                 RowSpec.Toggle("Noclip"),
                 RowSpec.Toggle("Unlock All Recipes")
-            }
-        },
-        new CategorySpec
-        {
-            Name = "Online",
-            IconName = "online",
-            Rows = new List<RowSpec>
-            {
-                RowSpec.Toggle("Sync Cheats To All Players"),
-                RowSpec.Toggle("Hide Cheats From Other Players"),
-                RowSpec.Toggle("Give All Players Infinite Money"),
-                RowSpec.Toggle("Host-Only Cheat Restrictions")
             }
         }
     };
