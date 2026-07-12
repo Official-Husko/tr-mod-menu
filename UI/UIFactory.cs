@@ -18,6 +18,19 @@ internal readonly struct UILabel
     }
 
     public void SetText(string text) => _setText(text);
+
+    public void SetAlignRight()
+    {
+        switch (Graphic)
+        {
+            case TextMeshProUGUI tmp:
+                tmp.alignment = TextAlignmentOptions.MidlineRight;
+                break;
+            case Text legacy:
+                legacy.alignment = TextAnchor.MiddleRight;
+                break;
+        }
+    }
 }
 
 internal readonly struct SidebarTab
@@ -90,6 +103,11 @@ internal static class UIFactory
         {
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.font = _tmpFont;
+            // The game's default material for this font asset may have its own tinted
+            // _FaceColor baked in, which multiplies against our vertex color below and can
+            // turn every label black regardless of what we set `.color` to. Force a neutral
+            // white base on our own material instance so `.color` is the only thing tinting.
+            tmp.fontMaterial.SetColor("_FaceColor", Color.white);
             tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.color = color;
@@ -112,17 +130,17 @@ internal static class UIFactory
         return new UILabel(legacyText, s => legacyText.text = s);
     }
 
-    public static SidebarTab CreateSidebarTab(RectTransform parent, string label, Action onClick)
+    public static SidebarTab CreateSidebarTab(RectTransform parent, string label, string iconName, Action onClick)
     {
         var go = new GameObject($"Tab_{label}", typeof(RectTransform));
         go.transform.SetParent(parent, false);
 
         var layoutEl = go.AddComponent<LayoutElement>();
-        layoutEl.preferredHeight = 40;
+        layoutEl.preferredHeight = 30;
         layoutEl.flexibleWidth = 1;
 
         var img = go.AddComponent<Image>();
-        img.sprite = UITheme.RoundedRect(48, 48, 8);
+        img.sprite = UITheme.RoundedRect(40, 40, 7);
         img.type = Image.Type.Sliced;
         img.color = new Color(0f, 0f, 0f, 0f);
 
@@ -130,15 +148,38 @@ internal static class UIFactory
         button.transition = Selectable.Transition.None;
         button.onClick.AddListener(() => onClick?.Invoke());
 
-        var labelHandle = CreateLabel(go.transform, label, 15, UITheme.MutedText);
+        var icon = Icons.Load(iconName);
+        Image iconImg = null;
+        var labelInset = 12f;
+        if (icon != null)
+        {
+            var iconGo = new GameObject("Icon", typeof(RectTransform));
+            iconGo.transform.SetParent(go.transform, false);
+            var iconRect = (RectTransform)iconGo.transform;
+            iconRect.anchorMin = new Vector2(0f, 0.5f);
+            iconRect.anchorMax = new Vector2(0f, 0.5f);
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.sizeDelta = new Vector2(14f, 14f);
+            iconRect.anchoredPosition = new Vector2(10f, 0f);
+
+            iconImg = iconGo.AddComponent<Image>();
+            iconImg.sprite = icon;
+            iconImg.color = UITheme.MutedText;
+            iconImg.raycastTarget = false;
+
+            labelInset = 10f + 14f + 6f; // icon left inset + icon width + gap before label
+        }
+
+        var labelHandle = CreateLabel(go.transform, label, 13, UITheme.MutedText);
         var labelRect = labelHandle.Graphic.rectTransform;
         Stretch(labelRect);
-        labelRect.offsetMin = new Vector2(14, 0);
-        labelRect.offsetMax = new Vector2(-14, 0);
+        labelRect.offsetMin = new Vector2(labelInset, 0);
+        labelRect.offsetMax = new Vector2(-12, 0);
 
         var hover = go.AddComponent<HoverEffect>();
         hover.TargetImage = img;
         hover.TargetLabel = labelHandle.Graphic;
+        hover.TargetIcon = iconImg;
         hover.IdleColor = new Color(0f, 0f, 0f, 0f);
         hover.HoverColor = new Color(UITheme.Border.r, UITheme.Border.g, UITheme.Border.b, 1f);
         hover.SelectedColor = new Color(UITheme.Accent.r, UITheme.Accent.g, UITheme.Accent.b, 0.18f);
@@ -153,8 +194,8 @@ internal static class UIFactory
     {
         var rect = CreateFullRect(parent, "RowList");
         var vlg = rect.gameObject.AddComponent<VerticalLayoutGroup>();
-        vlg.padding = new RectOffset(0, 0, 8, 8);
-        vlg.spacing = 4;
+        vlg.padding = new RectOffset(0, 0, 6, 6);
+        vlg.spacing = 2;
         vlg.childAlignment = TextAnchor.UpperLeft;
         vlg.childControlHeight = true;
         vlg.childControlWidth = true;
@@ -173,37 +214,87 @@ internal static class UIFactory
         layoutEl.minHeight = UITheme.RowHeight;
 
         var hlg = go.AddComponent<HorizontalLayoutGroup>();
-        hlg.padding = new RectOffset(16, 16, 0, 0);
-        hlg.spacing = 12;
+        hlg.padding = new RectOffset(14, 14, 0, 0);
+        hlg.spacing = 10;
         hlg.childAlignment = TextAnchor.MiddleLeft;
         hlg.childControlWidth = true;
         hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = true;
+        // Must stay false: HorizontalLayoutGroup folds its own childForceExpand flag into the
+        // flexible-size it reports to ITS parent (RowList), so leaving this true made every row
+        // report flexibleHeight=1 upward and get stretched to fill the whole panel evenly.
+        hlg.childForceExpandHeight = false;
 
         return (RectTransform)go.transform;
     }
 
     private static void CreateRowLabel(RectTransform row, string text)
     {
-        var label = CreateLabel(row, text, 15, UITheme.Text);
+        var label = CreateLabel(row, text, 13, UITheme.Text);
         var layoutEl = label.Graphic.gameObject.AddComponent<LayoutElement>();
         layoutEl.flexibleWidth = 1;
     }
 
+    public static void CreateInfoRow(RectTransform parent, string label, string value)
+    {
+        var row = CreateRow(parent);
+        CreateRowLabel(row, label);
+
+        var valueLabel = CreateLabel(row, value, 12, UITheme.MutedText);
+        valueLabel.SetAlignRight();
+        var layoutEl = valueLabel.Graphic.gameObject.AddComponent<LayoutElement>();
+        layoutEl.preferredWidth = 180;
+    }
+
+    public static void CreateLinkRow(RectTransform parent, string label, string url)
+    {
+        var row = CreateRow(parent);
+        CreateRowLabel(row, label);
+
+        var linkGo = new GameObject("Link", typeof(RectTransform));
+        linkGo.transform.SetParent(row, false);
+        var linkLayoutEl = linkGo.AddComponent<LayoutElement>();
+        linkLayoutEl.preferredWidth = 180;
+        linkLayoutEl.preferredHeight = UITheme.RowHeight;
+
+        var img = linkGo.AddComponent<Image>();
+        img.color = new Color(0f, 0f, 0f, 0f);
+        img.raycastTarget = true;
+
+        var button = linkGo.AddComponent<Button>();
+        button.transition = Selectable.Transition.None;
+        button.targetGraphic = img;
+        button.onClick.AddListener(() =>
+        {
+            Application.OpenURL(url);
+            Plugin.Logger.LogInfo($"[UI] Opening {url}");
+        });
+
+        var linkLabel = CreateLabel(linkGo.transform, url, 12, UITheme.Accent);
+        Stretch(linkLabel.Graphic.rectTransform);
+        linkLabel.SetAlignRight();
+    }
+
     public static void CreateToggleRow(RectTransform parent, string label, bool defaultValue, Action<bool> onChanged)
     {
+        const float pillWidth = 36f;
+        const float pillHeight = 18f;
+        const float knobSize = 14f;
+        const float margin = 2f;
+        var offX = margin + knobSize / 2f;
+        var onX = pillWidth - margin - knobSize / 2f;
+
         var row = CreateRow(parent);
         CreateRowLabel(row, label);
 
         var pillGo = new GameObject("Toggle", typeof(RectTransform));
         pillGo.transform.SetParent(row, false);
         var pillLayoutEl = pillGo.AddComponent<LayoutElement>();
-        pillLayoutEl.preferredWidth = 44;
-        pillLayoutEl.preferredHeight = 24;
+        pillLayoutEl.preferredWidth = pillWidth;
+        pillLayoutEl.preferredHeight = pillHeight;
 
         var pillImg = pillGo.AddComponent<Image>();
-        pillImg.sprite = UITheme.RoundedRect(44, 24, 12);
+        pillImg.sprite = UITheme.RoundedRect((int)pillWidth, (int)pillHeight, (int)(pillHeight / 2f));
         pillImg.type = Image.Type.Sliced;
         pillImg.color = defaultValue ? UITheme.Green : UITheme.Surface2;
 
@@ -213,15 +304,17 @@ internal static class UIFactory
         knobRect.anchorMin = new Vector2(0f, 0.5f);
         knobRect.anchorMax = new Vector2(0f, 0.5f);
         knobRect.pivot = new Vector2(0.5f, 0.5f);
-        knobRect.sizeDelta = new Vector2(20f, 20f);
-        knobRect.anchoredPosition = defaultValue ? new Vector2(32f, 0f) : new Vector2(12f, 0f);
+        knobRect.sizeDelta = new Vector2(knobSize, knobSize);
         var knobImg = knobGo.AddComponent<Image>();
-        knobImg.sprite = UITheme.RoundedRect(20, 20, 10);
+        knobImg.sprite = UITheme.RoundedRect((int)knobSize, (int)knobSize, (int)(knobSize / 2f));
         knobImg.color = UITheme.Text;
 
         var toggle = pillGo.AddComponent<ToggleSwitch>();
         toggle.Pill = pillImg;
         toggle.Knob = knobRect;
+        toggle.OffPos = new Vector2(offX, 0f);
+        toggle.OnPos = new Vector2(onX, 0f);
+        knobRect.anchoredPosition = defaultValue ? toggle.OnPos : toggle.OffPos;
         toggle.SetValue(defaultValue, notify: false);
         toggle.OnValueChanged += v => onChanged?.Invoke(v);
     }
@@ -234,21 +327,23 @@ internal static class UIFactory
         var containerGo = new GameObject("SliderContainer", typeof(RectTransform));
         containerGo.transform.SetParent(row, false);
         var containerLayoutEl = containerGo.AddComponent<LayoutElement>();
-        containerLayoutEl.preferredWidth = 220;
-        containerLayoutEl.preferredHeight = 24;
+        containerLayoutEl.preferredWidth = 170;
+        containerLayoutEl.preferredHeight = 18;
         var containerRect = (RectTransform)containerGo.transform;
         var containerHlg = containerGo.AddComponent<HorizontalLayoutGroup>();
-        containerHlg.spacing = 10;
+        containerHlg.spacing = 8;
         containerHlg.childAlignment = TextAnchor.MiddleLeft;
         containerHlg.childControlWidth = true;
         containerHlg.childControlHeight = true;
         containerHlg.childForceExpandWidth = false;
-        containerHlg.childForceExpandHeight = true;
+        // Same leak as CreateRow's HorizontalLayoutGroup -- must stay false.
+        containerHlg.childForceExpandHeight = false;
 
         var sliderGo = new GameObject("Slider", typeof(RectTransform));
         sliderGo.transform.SetParent(containerRect, false);
         var sliderLayoutEl = sliderGo.AddComponent<LayoutElement>();
-        sliderLayoutEl.preferredWidth = 140;
+        sliderLayoutEl.preferredWidth = 110;
+        sliderLayoutEl.preferredHeight = 14;
         sliderLayoutEl.flexibleWidth = 1;
         var sliderRect = (RectTransform)sliderGo.transform;
         var slider = sliderGo.AddComponent<Slider>();
@@ -257,20 +352,20 @@ internal static class UIFactory
         slider.maxValue = max;
         slider.transition = Selectable.Transition.None;
 
-        var trackImg = CreatePanel(sliderRect, "Track", UITheme.Surface2, 200, 5);
+        var trackImg = CreatePanel(sliderRect, "Track", UITheme.Surface2, 160, 4);
         var trackRect = trackImg.rectTransform;
-        trackRect.anchorMin = new Vector2(0f, 0.3f);
-        trackRect.anchorMax = new Vector2(1f, 0.7f);
+        trackRect.anchorMin = new Vector2(0f, 0.35f);
+        trackRect.anchorMax = new Vector2(1f, 0.65f);
         trackRect.offsetMin = Vector2.zero;
         trackRect.offsetMax = Vector2.zero;
 
         var fillAreaRect = CreateFullRect(sliderRect, "Fill Area");
-        fillAreaRect.anchorMin = new Vector2(0f, 0.3f);
-        fillAreaRect.anchorMax = new Vector2(1f, 0.7f);
+        fillAreaRect.anchorMin = new Vector2(0f, 0.35f);
+        fillAreaRect.anchorMax = new Vector2(1f, 0.65f);
         fillAreaRect.offsetMin = Vector2.zero;
         fillAreaRect.offsetMax = Vector2.zero;
 
-        var fillImg = CreatePanel(fillAreaRect, "Fill", UITheme.Accent, 200, 5);
+        var fillImg = CreatePanel(fillAreaRect, "Fill", UITheme.Accent, 160, 4);
         var fillRect = fillImg.rectTransform;
         fillRect.anchorMin = new Vector2(0f, 0f);
         fillRect.anchorMax = new Vector2(1f, 1f);
@@ -280,9 +375,9 @@ internal static class UIFactory
 
         var handleAreaRect = CreateFullRect(sliderRect, "Handle Slide Area");
 
-        var handleImg = CreatePanel(handleAreaRect, "Handle", UITheme.Text, 20, 10);
+        var handleImg = CreatePanel(handleAreaRect, "Handle", UITheme.Text, 10, 5);
         var handleRect = handleImg.rectTransform;
-        handleRect.sizeDelta = new Vector2(20f, 20f);
+        handleRect.sizeDelta = new Vector2(10f, 10f);
         var handleHover = handleImg.gameObject.AddComponent<HoverEffect>();
         handleHover.TargetImage = handleImg;
         handleHover.IdleColor = UITheme.Text;
@@ -291,9 +386,9 @@ internal static class UIFactory
         slider.handleRect = handleRect;
         slider.targetGraphic = handleImg;
 
-        var valueLabel = CreateLabel(containerRect, defaultValue.ToString(format), 14, UITheme.MutedText);
+        var valueLabel = CreateLabel(containerRect, defaultValue.ToString(format), 12, UITheme.MutedText);
         var valueLayoutEl = valueLabel.Graphic.gameObject.AddComponent<LayoutElement>();
-        valueLayoutEl.preferredWidth = 56;
+        valueLayoutEl.preferredWidth = 44;
 
         slider.value = defaultValue;
         slider.onValueChanged.AddListener(v =>

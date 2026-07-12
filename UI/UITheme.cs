@@ -5,23 +5,23 @@ namespace tr_mod_menu.UI;
 
 internal static class UITheme
 {
-    // Catppuccin Mocha
+    // Catppuccin Mocha backgrounds/accent, with text pushed to true white/silver per feedback
     public static readonly Color Base = Hex("#1E1E2E");
     public static readonly Color Surface = Hex("#24273A");
     public static readonly Color Border = Hex("#313244");
     public static readonly Color Surface2 = Hex("#585B70");
-    public static readonly Color Text = Hex("#CDD6F4");
-    public static readonly Color MutedText = Hex("#9399B2");
+    public static readonly Color Text = Hex("#FFFFFF");
+    public static readonly Color MutedText = Hex("#B8BCC8");
     public static readonly Color Accent = Hex("#CBA6F7");
     public static readonly Color AccentHover = Hex("#DDB6F2");
     public static readonly Color Green = Hex("#A6E3A1");
     public static readonly Color Red = Hex("#F38BA8");
 
-    public const int WindowWidth = 780;
-    public const int WindowHeight = 520;
-    public const int TitleBarHeight = 40;
-    public const int SidebarWidth = 190;
-    public const int RowHeight = 44;
+    public const int WindowWidth = 620;
+    public const int WindowHeight = 420;
+    public const int TitleBarHeight = 34;
+    public const int SidebarWidth = 150;
+    public const int RowHeight = 30;
 
     public const float AnimSpeed = 12f;
     public const float WindowAnimDuration = 0.15f;

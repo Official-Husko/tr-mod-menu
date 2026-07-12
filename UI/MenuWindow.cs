@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,7 +17,7 @@ internal class MenuWindow : MonoBehaviour
     private readonly List<SidebarTab> _tabs = new();
     private readonly List<GameObject> _categoryPanels = new();
 
-    public static MenuWindow Create(RectTransform canvasRoot)
+    public static MenuWindow Create(RectTransform canvasRoot, ConfigEntry<KeyCode> toggleKey)
     {
         var backdrop = UIFactory.CreatePanel(canvasRoot, "Backdrop",
             new Color(UITheme.Base.r, UITheme.Base.g, UITheme.Base.b, 0.55f), 4, 0);
@@ -26,11 +28,11 @@ internal class MenuWindow : MonoBehaviour
         windowGo.transform.SetParent(canvasRoot, false);
 
         var window = windowGo.AddComponent<MenuWindow>();
-        window.Init(backdrop);
+        window.Init(backdrop, toggleKey);
         return window;
     }
 
-    private void Init(Image backdrop)
+    private void Init(Image backdrop, ConfigEntry<KeyCode> toggleKey)
     {
         _backdrop = backdrop;
 
@@ -44,7 +46,7 @@ internal class MenuWindow : MonoBehaviour
         _canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         var panelImg = gameObject.AddComponent<Image>();
-        panelImg.sprite = UITheme.RoundedRect(64, 64, 14);
+        panelImg.sprite = UITheme.RoundedRect(64, 64, 12);
         panelImg.type = Image.Type.Sliced;
         panelImg.color = UITheme.Surface;
         panelImg.raycastTarget = true;
@@ -54,7 +56,7 @@ internal class MenuWindow : MonoBehaviour
 
         var sidebarRect = BuildSidebar();
         var contentRect = BuildContent();
-        BuildCategories(sidebarRect, contentRect);
+        BuildCategories(sidebarRect, contentRect, toggleKey);
     }
 
     private void BuildTitleBar()
@@ -67,11 +69,11 @@ internal class MenuWindow : MonoBehaviour
         titleBarRect.offsetMin = new Vector2(0f, -UITheme.TitleBarHeight);
         titleBarRect.offsetMax = new Vector2(0f, 0f);
 
-        var title = UIFactory.CreateLabel(titleBarRect, "TR MOD MENU", 17, UITheme.Text);
+        var title = UIFactory.CreateLabel(titleBarRect, "TR MOD MENU", 14, UITheme.Text);
         var titleRect = title.Graphic.rectTransform;
         UIFactory.Stretch(titleRect);
-        titleRect.offsetMin = new Vector2(18f, 0f);
-        titleRect.offsetMax = new Vector2(-90f, 0f);
+        titleRect.offsetMin = new Vector2(14f, 0f);
+        titleRect.offsetMax = new Vector2(-76f, 0f);
 
         var resetGo = new GameObject("ResetButton", typeof(RectTransform));
         resetGo.transform.SetParent(titleBarRect, false);
@@ -79,8 +81,8 @@ internal class MenuWindow : MonoBehaviour
         resetRect.anchorMin = new Vector2(1f, 0.5f);
         resetRect.anchorMax = new Vector2(1f, 0.5f);
         resetRect.pivot = new Vector2(1f, 0.5f);
-        resetRect.sizeDelta = new Vector2(60f, 24f);
-        resetRect.anchoredPosition = new Vector2(-16f, 0f);
+        resetRect.sizeDelta = new Vector2(52f, 20f);
+        resetRect.anchoredPosition = new Vector2(-14f, 0f);
 
         var resetImg = resetGo.AddComponent<Image>();
         resetImg.color = new Color(0f, 0f, 0f, 0f);
@@ -91,7 +93,7 @@ internal class MenuWindow : MonoBehaviour
         resetButton.targetGraphic = resetImg;
         resetButton.onClick.AddListener(() => Plugin.Logger.LogInfo("[Placeholder] Reset clicked (no-op)."));
 
-        var resetLabel = UIFactory.CreateLabel(resetRect, "Reset", 14, UITheme.Red);
+        var resetLabel = UIFactory.CreateLabel(resetRect, "Reset", 12, UITheme.Red);
         UIFactory.Stretch(resetLabel.Graphic.rectTransform);
     }
 
@@ -101,15 +103,15 @@ internal class MenuWindow : MonoBehaviour
         var underTitleRect = underTitle.rectTransform;
         underTitleRect.anchorMin = new Vector2(0f, 1f);
         underTitleRect.anchorMax = new Vector2(1f, 1f);
-        underTitleRect.offsetMin = new Vector2(0f, -(UITheme.TitleBarHeight + 2f));
+        underTitleRect.offsetMin = new Vector2(0f, -(UITheme.TitleBarHeight + 1f));
         underTitleRect.offsetMax = new Vector2(0f, -UITheme.TitleBarHeight);
 
         var vertical = UIFactory.CreatePanel(transform, "SidebarDivider", UITheme.Border, 4, 0);
         var verticalRect = vertical.rectTransform;
         verticalRect.anchorMin = new Vector2(0f, 0f);
         verticalRect.anchorMax = new Vector2(0f, 1f);
-        verticalRect.offsetMin = new Vector2(UITheme.SidebarWidth, 8f);
-        verticalRect.offsetMax = new Vector2(UITheme.SidebarWidth + 2f, -(UITheme.TitleBarHeight + 8f));
+        verticalRect.offsetMin = new Vector2(UITheme.SidebarWidth, 6f);
+        verticalRect.offsetMax = new Vector2(UITheme.SidebarWidth + 1f, -(UITheme.TitleBarHeight + 6f));
     }
 
     private RectTransform BuildSidebar()
@@ -123,8 +125,8 @@ internal class MenuWindow : MonoBehaviour
         sidebarRect.offsetMax = new Vector2(UITheme.SidebarWidth, -UITheme.TitleBarHeight);
 
         var vlg = sidebar.AddComponent<VerticalLayoutGroup>();
-        vlg.padding = new RectOffset(12, 12, 12, 12);
-        vlg.spacing = 6;
+        vlg.padding = new RectOffset(8, 8, 8, 8);
+        vlg.spacing = 3;
         vlg.childAlignment = TextAnchor.UpperLeft;
         vlg.childControlWidth = true;
         vlg.childControlHeight = true;
@@ -141,43 +143,72 @@ internal class MenuWindow : MonoBehaviour
         var contentRect = (RectTransform)content.transform;
         contentRect.anchorMin = new Vector2(0f, 0f);
         contentRect.anchorMax = new Vector2(1f, 1f);
-        contentRect.offsetMin = new Vector2(UITheme.SidebarWidth + 2f, 0f);
+        contentRect.offsetMin = new Vector2(UITheme.SidebarWidth + 1f, 0f);
         contentRect.offsetMax = new Vector2(0f, -UITheme.TitleBarHeight);
         return contentRect;
     }
 
-    private void BuildCategories(RectTransform sidebarRect, RectTransform contentRect)
+    private void BuildCategories(RectTransform sidebarRect, RectTransform contentRect, ConfigEntry<KeyCode> toggleKey)
     {
-        for (var i = 0; i < MenuCategories.All.Count; i++)
+        foreach (var category in MenuCategories.All)
         {
-            var category = MenuCategories.All[i];
-            var index = i;
-
-            var tab = UIFactory.CreateSidebarTab(sidebarRect, category.Name, () => SelectCategory(index));
-            _tabs.Add(tab);
-
-            var panelRect = UIFactory.CreateFullRect(contentRect, $"Panel_{category.Name}");
-            var rowList = UIFactory.CreateRowList(panelRect);
-            foreach (var row in category.Rows)
+            AddPanel(sidebarRect, contentRect, category.Name, category.IconName, rowList =>
             {
-                if (row.Kind == RowKind.Toggle)
-                {
-                    UIFactory.CreateToggleRow(rowList, row.Label, row.DefaultBool,
-                        v => Plugin.Logger.LogInfo($"[Placeholder] {category.Name}.{row.Label} = {v}"));
-                }
-                else
-                {
-                    UIFactory.CreateSliderRow(rowList, row.Label, row.Min, row.Max, row.DefaultFloat, row.Format,
-                        v => Plugin.Logger.LogInfo($"[Placeholder] {category.Name}.{row.Label} = {v.ToString(row.Format)}"));
-                }
-            }
-
-            panelRect.gameObject.SetActive(i == 0);
-            _categoryPanels.Add(panelRect.gameObject);
+                foreach (var row in category.Rows)
+                    BuildDataRow(rowList, category.Name, row);
+            });
         }
+
+        AddPanel(sidebarRect, contentRect, "Settings", "settings", rowList => BuildSettingsPanel(rowList, toggleKey));
+        AddPanel(sidebarRect, contentRect, "About", "about", BuildAboutPanel);
 
         if (_tabs.Count > 0)
             _tabs[0].Hover.IsSelected = true;
+        for (var i = 0; i < _categoryPanels.Count; i++)
+            _categoryPanels[i].SetActive(i == 0);
+    }
+
+    private void AddPanel(RectTransform sidebarRect, RectTransform contentRect, string name, string iconName, Action<RectTransform> build)
+    {
+        var index = _tabs.Count;
+        var tab = UIFactory.CreateSidebarTab(sidebarRect, name, iconName, () => SelectCategory(index));
+        _tabs.Add(tab);
+
+        var panelRect = UIFactory.CreateFullRect(contentRect, $"Panel_{name}");
+        var rowList = UIFactory.CreateRowList(panelRect);
+        build(rowList);
+
+        _categoryPanels.Add(panelRect.gameObject);
+    }
+
+    private static void BuildDataRow(RectTransform rowList, string categoryName, RowSpec row)
+    {
+        if (row.Kind == RowKind.Toggle)
+        {
+            UIFactory.CreateToggleRow(rowList, row.Label, row.DefaultBool,
+                v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v}"));
+        }
+        else
+        {
+            UIFactory.CreateSliderRow(rowList, row.Label, row.Min, row.Max, row.DefaultFloat, row.Format,
+                v => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} = {v.ToString(row.Format)}"));
+        }
+    }
+
+    private static void BuildSettingsPanel(RectTransform rowList, ConfigEntry<KeyCode> toggleKey)
+    {
+        UIFactory.CreateInfoRow(rowList, "Menu Toggle Key", toggleKey.Value.ToString());
+        UIFactory.CreateSliderRow(rowList, "UI Scale", 0.75f, 1.5f, 1f, "0.00\"x\"",
+            v => Plugin.Logger.LogInfo($"[Placeholder] Settings.UIScale = {v:0.00}"));
+    }
+
+    private static void BuildAboutPanel(RectTransform rowList)
+    {
+        UIFactory.CreateInfoRow(rowList, "Mod", MyPluginInfo.PLUGIN_NAME);
+        UIFactory.CreateInfoRow(rowList, "Version", MyPluginInfo.PLUGIN_VERSION);
+        UIFactory.CreateInfoRow(rowList, "Game", "Travellers Rest");
+        UIFactory.CreateInfoRow(rowList, "Credits", AboutInfo.Credits);
+        UIFactory.CreateLinkRow(rowList, "Source Code", AboutInfo.RepoUrl);
     }
 
     private void SelectCategory(int index)

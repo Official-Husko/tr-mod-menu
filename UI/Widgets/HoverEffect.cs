@@ -10,6 +10,7 @@ internal class HoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 {
     public Image TargetImage;
     public Graphic TargetLabel;
+    public Image TargetIcon;
     public Color IdleColor;
     public Color HoverColor;
     public Color SelectedColor;
@@ -28,10 +29,12 @@ internal class HoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         var imageTarget = IsSelected ? SelectedColor : (_hovered ? HoverColor : IdleColor);
         TargetImage.color = Color.Lerp(TargetImage.color, imageTarget, Time.unscaledDeltaTime * UITheme.AnimSpeed);
 
-        if (TargetLabel == null)
-            return;
-
         var labelTarget = IsSelected ? SelectedLabelColor : (_hovered ? HoverLabelColor : IdleLabelColor);
-        TargetLabel.color = Color.Lerp(TargetLabel.color, labelTarget, Time.unscaledDeltaTime * UITheme.AnimSpeed);
+
+        if (TargetLabel != null)
+            TargetLabel.color = Color.Lerp(TargetLabel.color, labelTarget, Time.unscaledDeltaTime * UITheme.AnimSpeed);
+
+        if (TargetIcon != null)
+            TargetIcon.color = Color.Lerp(TargetIcon.color, labelTarget, Time.unscaledDeltaTime * UITheme.AnimSpeed);
     }
 }

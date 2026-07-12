@@ -39,6 +39,7 @@ internal class RowSpec
 internal class CategorySpec
 {
     public string Name;
+    public string IconName;
     public List<RowSpec> Rows;
 }
 
@@ -54,6 +55,7 @@ internal static class MenuCategories
         new CategorySpec
         {
             Name = "Player",
+            IconName = "player",
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("God Mode"),
@@ -65,6 +67,7 @@ internal static class MenuCategories
         new CategorySpec
         {
             Name = "Farming",
+            IconName = "farming",
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("Instant Crop Growth"),
@@ -75,6 +78,7 @@ internal static class MenuCategories
         new CategorySpec
         {
             Name = "Tavern",
+            IconName = "tavern",
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("Instant Barrel Aging"),
@@ -86,6 +90,7 @@ internal static class MenuCategories
         new CategorySpec
         {
             Name = "World",
+            IconName = "world",
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("Freeze Time of Day"),
@@ -96,11 +101,11 @@ internal static class MenuCategories
         new CategorySpec
         {
             Name = "Misc",
+            IconName = "misc",
             Rows = new List<RowSpec>
             {
                 RowSpec.Toggle("Noclip"),
-                RowSpec.Toggle("Unlock All Recipes"),
-                RowSpec.Slider("UI Scale", 0.75f, 1.5f, 1f, "0.00\"x\"")
+                RowSpec.Toggle("Unlock All Recipes")
             }
         }
     };

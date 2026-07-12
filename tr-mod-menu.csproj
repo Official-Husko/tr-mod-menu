@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>tr_mod_menu</AssemblyName>
     <Product>My first plugin</Product>
-    <Version>1.0.2</Version>
+    <Version>1.0.7</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -14,9 +14,11 @@
     </RestoreAdditionalProjectSources>
     <RootNamespace>tr_mod_menu</RootNamespace>
     <!-- game_source/ is a decompiled dump of the game's own assemblies, kept for reference only.
-         It must never be compiled: it won't build as-is, and its types would collide with the
-         real game DLLs referenced below. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);game_source/**</DefaultItemExcludes>
+         assets/ is the raw Font Awesome Pro kit (150k+ SVGs); only the handful of PNGs we
+         rasterize out of it into Icons/ are ever embedded. Neither must be swept into project
+         items: game_source/ won't compile and its types collide with the real game DLLs below,
+         and assets/ would otherwise balloon MSBuild's item globbing for no reason. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);game_source/**;assets/**</DefaultItemExcludes>
     <GameManagedDir>/home/pawbeans/Downloads/Travellers Rest/Windows/TravellersRest_Data/Managed</GameManagedDir>
   </PropertyGroup>
 
@@ -25,6 +27,10 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.62.7" IncludeAssets="compile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icons/*.png" />
   </ItemGroup>
 
   <ItemGroup>

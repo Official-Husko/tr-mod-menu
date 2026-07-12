@@ -15,6 +15,8 @@ internal class MenuController : MonoBehaviour
 
     public static MenuController Create(ConfigFile config)
     {
+        DestroyExisting();
+
         var root = new GameObject("TRModMenu_UIRoot");
         DontDestroyOnLoad(root);
 
@@ -41,8 +43,30 @@ internal class MenuController : MonoBehaviour
 
         EnsureEventSystem();
 
-        _window = MenuWindow.Create(canvasRoot);
+        _window = MenuWindow.Create(canvasRoot, _toggleKey);
         _window.Close(instant: true);
+    }
+
+    // BepInEx Script Engine hot-reloads this assembly without unloading whatever a previous
+    // Awake() built, so a stale UI root (and its own EventSystem) can persist across reloads
+    // via DontDestroyOnLoad. Without this, each reload would stack up another full menu -- and
+    // another Update() polling the toggle key, so pressing it would open/close all of them at
+    // once.
+    //
+    // Matching must be done by GameObject *name*, not component type: Script Engine loads each
+    // reload into a brand new Assembly, so a stale root's MenuController component is a
+    // different CLR Type than this one despite sharing the same name/namespace --
+    // Resources.FindObjectsOfTypeAll<MenuController>() can never match across that boundary.
+    // Names on the GameObjects themselves survive reloads, so search on those instead.
+    // Resources.FindObjectsOfTypeAll also catches inactive/DontDestroyOnLoad instances that
+    // plain scene-search APIs like GameObject.Find can miss.
+    private static void DestroyExisting()
+    {
+        foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+        {
+            if (go != null && (go.name == "TRModMenu_UIRoot" || go.name == "TRModMenu_EventSystem"))
+                Destroy(go);
+        }
     }
 
     // A second EventSystem is harmless (Unity no-ops any but the first), so this is a cheap
