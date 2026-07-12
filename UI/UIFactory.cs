@@ -471,7 +471,7 @@ internal static class UIFactory
         }
     }
 
-    private static SimpleDropdown CreateDropdown(RectTransform parent, List<string> options, int defaultIndex, float width)
+    private static SimpleDropdown CreateDropdown(RectTransform parent, List<string> options, int defaultIndex, float width, bool disabled = false)
     {
         var ddGo = new GameObject("Dropdown", typeof(RectTransform));
         ddGo.transform.SetParent(parent, false);
@@ -482,9 +482,9 @@ internal static class UIFactory
         var ddImg = ddGo.AddComponent<Image>();
         ddImg.sprite = UITheme.RoundedRect(40, 20, 6);
         ddImg.type = Image.Type.Sliced;
-        ddImg.color = UITheme.Surface2;
+        ddImg.color = disabled ? UITheme.Mantle : UITheme.Surface2;
 
-        var captionLabel = CreateLabel(ddGo.transform, options.Count > 0 ? options[defaultIndex] : "", 12, UITheme.Text);
+        var captionLabel = CreateLabel(ddGo.transform, options.Count > 0 ? options[defaultIndex] : "", 12, disabled ? UITheme.MutedText : UITheme.Text);
         var captionRect = captionLabel.Graphic.rectTransform;
         Stretch(captionRect);
         captionRect.offsetMin = new Vector2(8f, 0f);
@@ -511,6 +511,7 @@ internal static class UIFactory
         dropdown.Options = options;
         dropdown.Value = Mathf.Clamp(defaultIndex, 0, Mathf.Max(options.Count - 1, 0));
         dropdown.OnCaptionChanged = captionLabel.SetText;
+        dropdown.Disabled = disabled;
 
         return dropdown;
     }
@@ -635,6 +636,52 @@ internal static class UIFactory
             float.TryParse(numberInput.text, out var amount);
             onExecute?.Invoke(dropdown.Value, amount);
         });
+    }
+
+    // Pick a category, pick an item filtered to that category, type an amount, click Execute --
+    // purpose-built for Give Item rather than a generalization of CreateDropdownAmountActionRow
+    // above, since the second dropdown's options depend on the first (unlike that one's single
+    // static list). catalog is (category display name, item display names within it); both come
+    // pre-resolved as plain strings from the calling Cheats class so this file stays decoupled
+    // from any real game type, same as every other row builder here.
+    public static void CreateGiveItemRow(RectTransform parent, string label, string iconName,
+        List<(string CategoryName, List<string> ItemNames)> catalog, Action<int, int, float> onExecute,
+        bool disabled = false, string note = null)
+    {
+        var row = CreateRow(parent, iconName, note);
+        CreateRowLabel(row, label);
+
+        if (catalog.Count == 0)
+        {
+            CreateLabel(row, "No items found", 12, UITheme.MutedText);
+            return;
+        }
+
+        var categoryNames = new List<string>();
+        foreach (var entry in catalog)
+            categoryNames.Add(entry.CategoryName);
+
+        var categoryDropdown = CreateDropdown(row, categoryNames, 0, 78f, disabled);
+        var itemDropdown = CreateDropdown(row, catalog[0].ItemNames, 0, 128f, disabled);
+
+        var applyCaption = categoryDropdown.OnCaptionChanged;
+        categoryDropdown.OnCaptionChanged = caption =>
+        {
+            applyCaption(caption);
+            itemDropdown.SetOptions(catalog[categoryDropdown.Value].ItemNames);
+        };
+
+        var numberInput = CreateNumberInput(row, 1f, "0", 40f);
+        if (numberInput == null)
+            return;
+
+        numberInput.interactable = !disabled;
+
+        AddExecuteButton(row, () =>
+        {
+            float.TryParse(numberInput.text, out var amount);
+            onExecute?.Invoke(categoryDropdown.Value, itemDropdown.Value, amount);
+        }, disabled);
     }
 
     // Type a number, click Execute. `disabled` grays out the field and button without

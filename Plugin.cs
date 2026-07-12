@@ -21,6 +21,7 @@ public class Plugin : BaseUnityPlugin
     // TODO: Level cheat
     // TODO: Perk Point cheat
     // TODO: Skip to next day
+    // FIXME: giving items that are liquid e.g. beer and wine do not work.
     internal static new ManualLogSource Logger;
     private MenuController _menuController;
 
@@ -28,6 +29,6 @@ public class Plugin : BaseUnityPlugin
     {
         Logger = base.Logger;
         _menuController = MenuController.Create(Config);
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }
 }

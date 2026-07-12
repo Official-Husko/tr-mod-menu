@@ -11,7 +11,8 @@ internal enum RowKind
     Dropdown,
     DropdownAmount,
     NumberInput,
-    Button
+    Button,
+    GiveItem
 }
 
 internal class RowSpec
@@ -33,6 +34,10 @@ internal class RowSpec
     // Most rows are still inert placeholders logged by MenuWindow.BuildDataRow. A row that's
     // been wired to a real game system (see Cheats/) sets this to override that placeholder.
     public Action<float> OnExecute;
+
+    // GiveItem rows only: (categoryIndex, itemIndex, amount) -- separate from OnExecute above
+    // since a cascading category+item picker needs two indices, not one float.
+    public Action<int, int, float> OnGiveItem;
 
     // Button rows only: close the whole mod menu right after executing, so the game's own UI
     // (e.g. the character creator) isn't stuck behind our overlay/backdrop.
@@ -114,6 +119,16 @@ internal class RowSpec
         CloseMenuAfter = closeMenuAfter,
         Note = note
     };
+
+    // Pick a category, pick an item, type an amount, click Execute.
+    public static RowSpec GiveItem(string label, string iconName, Action<int, int, float> onExecute, string note = null) => new()
+    {
+        Label = label,
+        IconName = iconName,
+        Kind = RowKind.GiveItem,
+        OnGiveItem = onExecute,
+        Note = note
+    };
 }
 
 internal class CategorySpec
@@ -169,7 +184,8 @@ internal static class MenuCategories
                 RowSpec.Toggle("Instant Crop Growth", "seedling"),
                 RowSpec.Toggle("Water Crops Automatically", "droplet"),
                 RowSpec.Slider("Crop Growth Speed", "gaugehigh", 1f, 10f, 1f, "0.0\"x\""),
-                RowSpec.DropdownAmount("Give Item", "gift", new List<string> { "Food", "Seed", "Fish", "Drink" }, 1f)
+                RowSpec.GiveItem("Give Item", "gift", ItemCheats.GiveItem,
+                    "Adds the chosen item straight to your own inventory (drops at your feet if it's full). Local only, same as Add Money.")
             }
         },
         new CategorySpec

@@ -20,21 +20,45 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
     public List<string> Options;
     public int Value;
     public Action<string> OnCaptionChanged;
+    public bool Disabled;
+
+    // Give Item is the first row with two SimpleDropdowns side by side -- tracked globally
+    // (not just this instance's own _popup) so opening one always closes any other that's open,
+    // rather than relying on each dropdown only ever seeing clicks meant for itself.
+    private static SimpleDropdown _openDropdown;
 
     private GameObject _popup;
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (Disabled)
+            return;
+
         if (_popup != null)
             ClosePopup();
         else
             OpenPopup();
     }
 
+    // For a dropdown whose options depend on another control (e.g. an item list filtered by a
+    // category dropdown) -- swaps the option list and re-applies OnCaptionChanged so the
+    // displayed caption reflects the new list immediately, the same way a manual selection would,
+    // without requiring the popup to actually be opened.
+    public void SetOptions(List<string> options, int value = 0)
+    {
+        ClosePopup();
+        Options = options;
+        Value = Mathf.Clamp(value, 0, Mathf.Max(options.Count - 1, 0));
+        OnCaptionChanged?.Invoke(Options.Count > 0 ? Options[Value] : "");
+    }
+
     private void OnDisable() => ClosePopup();
 
     private void OpenPopup()
     {
+        if (_openDropdown != null && _openDropdown != this)
+            _openDropdown.ClosePopup();
+
         var canvas = GetComponentInParent<Canvas>();
         if (canvas == null)
             return;
@@ -91,7 +115,19 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
         for (var i = 0; i < Options.Count; i++)
             BuildItem(listParent, i);
 
+        // Same class of bug as MenuWindow.BuildCategoryPanel's ForceRebuildLayoutImmediate (see
+        // its comment): this whole hierarchy -- ScrollRect/Viewport/Content/Scrollbar/layout
+        // groups -- is built from raw GameObjects this same frame and shown immediately, with no
+        // prior layout pass to piggyback on. Left alone, ScrollRect's bounds/scrollbar-size
+        // calculations (which need resolved RectTransform sizes) run stale on the first rendered
+        // frame -- confirmed live: the scrollbar handle rendered at full track size, wide enough
+        // to cover part of the popup, exactly like a panel's cards stacking with stale sizes
+        // before its first rebuild. Force it here, after every child exists, rather than trusting
+        // Unity's automatic end-of-frame rebuild to land before this popup is first painted.
+        LayoutRebuilder.ForceRebuildLayoutImmediate(popupRect);
+
         _popup = blockerGo;
+        _openDropdown = this;
     }
 
     // Short lists: no scrolling machinery needed, items just stack in a plain layout group.
@@ -167,8 +203,17 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
         var handleGo = new GameObject("Handle", typeof(RectTransform));
         handleGo.transform.SetParent(handleAreaRect, false);
         var handleRT = (RectTransform)handleGo.transform;
-        handleRT.anchorMin = Vector2.zero;
+        handleRT.anchorMin = new Vector2(0f, 1f - Mathf.Clamp01((float)MaxVisibleItems / Options.Count));
         handleRT.anchorMax = Vector2.one;
+        // The actual bug behind five failed fix attempts: a fresh RectTransform's sizeDelta
+        // defaults to (100, 100), and with stretch anchors (anchorMin != anchorMax, as above)
+        // sizeDelta isn't ignored -- it's an offset ADDED on top of the anchor-stretched size.
+        // Every previous attempt correctly computed and set anchorMin/anchorMax (confirmed by
+        // logging the live values: Handle.anchorMin/Max were exactly right on every single frame)
+        // but never touched sizeDelta, so the handle was always rendering ~100px wider and taller
+        // than its anchors alone would suggest -- explaining both the "way wider than a 6px
+        // scrollbar could ever be" mystery and why reasserting anchors every frame changed nothing.
+        handleRT.sizeDelta = Vector2.zero;
         var handleImg = handleGo.AddComponent<Image>();
         handleImg.sprite = UITheme.RoundedRect(6, 20, 3);
         handleImg.type = Image.Type.Sliced;
@@ -176,6 +221,7 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
 
         scrollbar.targetGraphic = handleImg;
         scrollbar.handleRect = handleRT;
+        scrollbar.size = Mathf.Clamp01((float)MaxVisibleItems / Options.Count);
         scrollRect.verticalScrollbar = scrollbar;
         scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
 
@@ -222,5 +268,7 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
         if (_popup != null)
             Destroy(_popup);
         _popup = null;
+        if (_openDropdown == this)
+            _openDropdown = null;
     }
 }

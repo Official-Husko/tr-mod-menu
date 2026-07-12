@@ -195,6 +195,16 @@ string name = LocalisationSystem.Get("Items/item_name_" + x.id);
 string desc = LocalisationSystem.Get("Items/item_description_" + x.id);
 ```
 
+`x.id` above is now stale and won't compile as-is: `Item.id` is `protected` in the current
+decompile (every public accessor for it is obfuscated, e.g. `JDJGFAACPFC()`/`IMCJPECAAPC()`, all
+functionally-identical one-liners around the same protected field) -- found while building the
+Give Item cheat below. Don't chase the raw id at all if you just want a display string: `Item`
+already has a clean public method for that, `item.IABAKHPEOAF(true)` (the `true` suppresses
+`<color=...>` rich-text tags the method otherwise wraps around Halloween/Christmas shop items,
+which would otherwise show up as literal text outside a rich-text-aware label). Only reach for one
+of the obfuscated id getters if you specifically need the raw int (e.g. to build a localization
+key by hand, as above).
+
 ### Worked examples already in this repo
 
 `Cheats/PlayerCheats.cs` follows the "prefer clean public members" rule above:
@@ -414,3 +424,103 @@ its RPC on *every* call regardless of whether the clamp actually changed anythin
 therefore stops looping once already at the cap instead of trusting the clamp alone, to avoid
 handing out free, unbounded recipe fragments as an unintended side effect of a big "add points"
 number.
+
+### Give Item (`Cheats/ItemCheats.cs`, `UI/Widgets/SimpleDropdown.SetOptions`)
+
+Straightforward compared to the last few (purely local, confirmed by reading `PlayerInventory.
+AddItem`'s body directly: no `OnlineManager`/RPC call anywhere in it, each player's inventory is
+its own separate `playerNum`-indexed component) -- the interesting part was the UI, not the cheat.
+
+The old placeholder's four options ("Food"/"Seed"/"Fish"/"Drink") didn't correspond to any single
+real enum. The actual data is `Item.category` (`Category`, a real top-level 12-value enum --
+`Misc, Brewing, Food, Farming, Nature, Tools, Crafters, Furniture, Decorations, All, Lighting,
+Cosmetic` -- confirmed used for real by `ShopUI`, not guessed), enumerated from `ItemDatabaseAccessor.
+GetDatabaseSO().items` (clean, a scene-level singleton independent of any save/spawn, so the
+catalog can be built as soon as the menu itself is built, unlike anything gated on
+`PlayerCheats.LocalPlayer()`). With a few hundred items across 12 categories, a single flat
+dropdown of everything would be unusable, so Give Item is a **cascading two-dropdown row**
+(category, then items filtered to it) -- the first row in this mod that needed one, so
+`UI/Widgets/SimpleDropdown.cs` gained a `SetOptions(list, value)` method (swaps the option list
+and re-applies `OnCaptionChanged` immediately, same as a manual selection would) and a `Disabled`
+flag (`SimpleDropdown` had no disabled-state concept at all before this, since no earlier
+`Dropdown`/`DropdownAmount` row was ever gated by `CompatibilityGate`). `UIFactory.
+CreateGiveItemRow` wires the category dropdown's `OnCaptionChanged` to also call the item
+dropdown's `SetOptions` with that category's item list, rather than generalizing
+`CreateDropdownAmountActionRow` -- that one's still a single static list with no dependency
+between controls, a genuinely different (simpler) shape worth keeping separate.
+
+Constructing the actual item to hand over isn't `new ItemInstance(item)` -- `Item` has a virtual
+factory, `item.JMDALJBNFML()` (obfuscated, no clean equivalent exists), overridden per subtype
+(`Food`/`Seed`/`Fish` each return their own `*Instance` type). This is confirmed as the game's own
+real pattern, not a workaround: `PlayerInventory`'s own add-by-id code calls the exact same
+factory method before handing the result to `AddItem`. Using the base `ItemInstance` constructor
+directly on a `Food`/`Seed`/`Fish` item would silently produce the wrong runtime type and likely
+break any downstream tooltip/freshness logic that does an `is FoodInstance` check.
+
+One more worth flagging for later: `PlayerInventory` has a *second*, richer add method
+(`AINJENENGFG(ItemInstance, int amount, ...)`) that takes a quantity directly instead of looping --
+tempting to reach for, but reading its body shows it calls into `OnlineSlotsManager` for batches of
+stacked slots, a path that hasn't been verified local-only the way plain `AddItem` has. `GiveItem`
+deliberately loops single `AddItem(item.JMDALJBNFML(), true)` calls instead (the `true` is
+`dropIfFull`, confirmed by reading `AddItem`'s body -- spawns a `DroppedItem` at your feet instead
+of silently failing partway through a bigger requested amount). Lesson repeated from the
+`HGJCFHPNFBI` case: when two methods do almost the same thing, the one that conveniently matches
+your exact call shape isn't automatically the safe one to reach for -- read the body of whichever
+one you didn't pick too, if only to confirm you were right to avoid it.
+
+Give Item's Category dropdown was also the first dropdown in this mod with more than
+`SimpleDropdown.MaxVisibleItems` (6) options, and the first to actually exercise `BuildScrollingList`
+-- which surfaced a real bug there. User report: "a big [accent-colored] box covering parts of" the
+popup. Took five attempts and, in the end, adding debug logging that dumped the actual live
+`RectTransform` values to find: the real bug was **`handleRT.sizeDelta` was never set**, left at a
+fresh `RectTransform`'s default of `(100, 100)`. With stretch anchors (`anchorMin != anchorMax`,
+which the handle correctly used from the start), `sizeDelta` isn't ignored -- it's an offset ADDED
+on top of the anchor-stretched size. So the handle was always rendering ~100px wider and taller
+than its (correctly-computed, every single time) anchors alone would suggest. Fix:
+`handleRT.sizeDelta = Vector2.zero;` alongside the anchor assignment. One line.
+
+Every attempt before finding this was chasing the wrong layer of the problem:
+
+- **Attempts 1-2** (`scrollbar.size = ...`, then `LayoutRebuilder.ForceRebuildLayoutImmediate`)
+  targeted *when* the handle's geometry got computed, on the theory that it was stale/unresolved.
+  Neither held. (Attempt 2 specifically couldn't have worked regardless: `LayoutRebuilder` only
+  walks `ILayoutElement`/`ILayoutGroup` components, and `ScrollRect`/`Scrollbar` aren't in that
+  family at all -- they're driven through `CanvasUpdateRegistry`'s separate pipeline.)
+- **Diagnosis, not a third guess**: rather than keep guessing from code, every distinctly-colored
+  element in the popup was temporarily recolored to a unique debug color and shipped for the user
+  to screenshot. Reply: "red box" -- confirmed the handle, not the track/background/item
+  highlight/blocker. Useful, but only narrowed *which component*, not *why* -- the bug wasn't in
+  when the geometry updated, it was in what value one of its fields had never been given.
+- **Attempts 3-4** (writing `handleRect.anchorMin`/`anchorMax` directly, then carefully reordering
+  every other wiring call to guarantee that write was strictly last) were still fighting the "when"
+  theory -- and *anchorMin*/*anchorMax* were never actually the problem to begin with, confirmed
+  later by logging them: exactly correct on every single frame, all five attempts. Reordering fixed
+  nothing because there was nothing wrong left to fix at that layer.
+- **What actually broke the loop**: logging the live `RectTransform` values (`.rect`, `.anchorMin`,
+  `.anchorMax`, `.sizeDelta`, parent `.rect`, from a `LateUpdate` for the first 5 frames) straight to
+  BepInEx's log, and asking the user to paste them back. `Handle.sizeDelta=(100.00, 100.00)` was
+  right there in the first line, next to `anchorMin`/`anchorMax` values that were completely
+  correct -- the mismatch between "anchors are right" and "rect is still wrong" is exactly what
+  should have pointed at sizeDelta many attempts earlier.
+
+Also added while investigating (unrelated but a real gap this row exposed, kept in the final fix): a
+static `_openDropdown` tracker on `SimpleDropdown` so opening one instance always closes any other
+one that's open -- Give Item is the first row with two dropdowns side by side, and there was no
+prior guarantee against both ending up open at once.
+
+General lessons:
+
+- When a fix doesn't work, don't refine the same theory a second time from pure code-reading -- get
+  real evidence. Debug-coloring suspects narrowed *which* component; it took logging the actual
+  field *values* to find *which field*. Screenshots answer "where"; logs answer "what."
+- A RectTransform has (at least) four things that jointly determine its final rect: anchorMin,
+  anchorMax, sizeDelta, and pivot. Getting one of them (anchors) provably correct on every frame is
+  not the same as getting the *rect* correct -- `sizeDelta` defaults to `(100, 100)` on every fresh
+  RectTransform and is silently additive under stretch anchors, not inert. When hand-building UI
+  from raw `new GameObject(...)` (no prefab, no Inspector default of `(0,0)` to fall back on), set
+  every dimension explicitly -- an unset one doesn't mean "no effect," it means "Unity's default,"
+  which for `sizeDelta` is actively wrong for a stretched element.
+- Five wrong-layer fixes in a row is a sign to change *category* of action, not to try a sixth
+  variation of the same one. The thing that actually worked wasn't a cleverer fix -- it was
+  switching from "guess, then verify by asking for a screenshot" to "log the exact values and read
+  them directly." Escalate to real data sooner than five attempts in, next time.

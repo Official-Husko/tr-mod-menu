@@ -261,6 +261,13 @@ internal class MenuWindow : MonoBehaviour
                         CloseRequested?.Invoke();
                 }, buttonBlocked, row.Note);
                 break;
+            case RowKind.GiveItem:
+                // Same gating as the other real-cheat rows above.
+                var giveItemBlocked = !CompatibilityGate.CheatsEnabled;
+                UIFactory.CreateGiveItemRow(rowList, row.Label, row.IconName, ItemCheats.GetCatalogLabels(),
+                    row.OnGiveItem ?? ((_, _, _) => Plugin.Logger.LogInfo($"[Placeholder] {categoryName}.{row.Label} executed")),
+                    giveItemBlocked, row.Note);
+                break;
         }
     }
 
