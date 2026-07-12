@@ -524,3 +524,18 @@ General lessons:
   variation of the same one. The thing that actually worked wasn't a cleverer fix -- it was
   switching from "guess, then verify by asking for a screenshot" to "log the exact values and read
   them directly." Escalate to real data sooner than five attempts in, next time.
+
+Right after that fix landed, a second, separate bug surfaced in the same popup: the last item in a
+dropdown list was cut off/unreadable. Both list builders (`BuildPlainList`, `BuildScrollingList`)
+sized their container from `ItemHeight * count` alone, never adding in the `(count - 1)` inter-item
+gaps `VerticalLayoutGroup.spacing` (1px) actually needs -- so every dropdown in the mod was always
+very slightly short by that many pixels, negligible for a handful of options but big enough at 11
+categories to visibly clip the last one. For the scrolling list specifically this was worse than
+cosmetic: `ScrollRect` derives its scrollable range from `content.sizeDelta`, so the undersized
+value made the bottom item permanently unreachable by scrolling, not just visually tight. Fixed by
+adding a shared `ItemSpacing` constant and folding `Mathf.Max(0, count - 1) * ItemSpacing` into
+every place a list's total height gets computed (`OpenPopup`'s `popupHeight`, and
+`BuildScrollingList`'s `contentRT.sizeDelta`). Same lesson as the `sizeDelta` bug right above it,
+different field: a hand-built layout's total size is the sum of every dimension a `LayoutGroup`
+actually uses (item sizes *and* spacing *and* padding), not just the obvious term -- leaving one
+out doesn't fail loudly, it just quietly undersizes the container by exactly that much.

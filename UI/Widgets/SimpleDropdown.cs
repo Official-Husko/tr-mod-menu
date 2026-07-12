@@ -16,6 +16,7 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
 {
     private const float ItemHeight = 20f;
     private const int MaxVisibleItems = 6;
+    private const float ItemSpacing = 1f; // shared with both list builders' VerticalLayoutGroup.spacing
 
     public List<string> Options;
     public int Value;
@@ -81,7 +82,12 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
 
         var width = localBottomRight.x - localBottomLeft.x;
         var visibleCount = Mathf.Min(Options.Count, MaxVisibleItems);
-        var popupHeight = ItemHeight * visibleCount + 8f;
+        // +8f is the popup's own 4px-per-side margin (see BuildPlainList/BuildScrollingList's
+        // offsetMin/offsetMax insets). The visible items also need spacing *between* them
+        // (visibleCount - 1 gaps) -- omitting that here previously left the popup exactly that
+        // many pixels short, clipping the last visible item against the viewport/list bounds
+        // instead of leaving it fully readable.
+        var popupHeight = ItemHeight * visibleCount + Mathf.Max(0, visibleCount - 1) * ItemSpacing + 8f;
         var needsScroll = Options.Count > MaxVisibleItems;
 
         // Full-screen invisible blocker closes the popup on an outside click; the popup is a
@@ -142,7 +148,7 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
         vlg.childControlHeight = false; // explicit sizeDelta per item, same fix as the row-stretch bug
         vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
-        vlg.spacing = 1f;
+        vlg.spacing = ItemSpacing;
         return listRect;
     }
 
@@ -171,14 +177,21 @@ internal class SimpleDropdown : MonoBehaviour, IPointerClickHandler
         contentRT.anchorMax = new Vector2(1f, 1f);
         contentRT.pivot = new Vector2(0.5f, 1f);
         contentRT.anchoredPosition = Vector2.zero;
-        contentRT.sizeDelta = new Vector2(0f, ItemHeight * Options.Count);
+        // Same gap this method's caller (OpenPopup) already accounts for in popupHeight, but for
+        // *every* item here, not just the visible window -- this is the full scrollable content,
+        // so leaving out the (Options.Count - 1) inter-item gaps understated its true height by
+        // exactly that many pixels. ScrollRect derives its scrollable range from this sizeDelta,
+        // so an undersized content area made the last item or two permanently unreachable by
+        // scrolling, not just visually tight -- there was no way to scroll far enough to bring the
+        // bottom of the list fully into view.
+        contentRT.sizeDelta = new Vector2(0f, ItemHeight * Options.Count + Mathf.Max(0, Options.Count - 1) * ItemSpacing);
         var vlg = contentRect.gameObject.AddComponent<VerticalLayoutGroup>();
         vlg.childAlignment = TextAnchor.UpperLeft;
         vlg.childControlWidth = true;
         vlg.childControlHeight = false;
         vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
-        vlg.spacing = 1f;
+        vlg.spacing = ItemSpacing;
 
         scrollRect.viewport = viewportRect;
         scrollRect.content = contentRT;
